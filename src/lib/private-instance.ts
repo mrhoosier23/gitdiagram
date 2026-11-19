@@ -111,12 +111,13 @@ export async function rejectUnauthorizedPrivateRequest(
 
   const allowedEmail = env.PRIVATE_ALLOWED_EMAIL?.trim().toLowerCase();
   const allowedAudience = env.PRIVATE_ACCESS_AUD?.trim();
-  if (!allowedEmail || !allowedAudience || ctx.access?.aud !== allowedAudience)
+  const access = ctx.access;
+  if (!allowedEmail || !allowedAudience || !access || access.aud !== allowedAudience)
     return blocked(403);
 
   let identity: { email?: string | null } | null | undefined;
   try {
-    identity = await ctx.access.getIdentity();
+    identity = await access.getIdentity();
   } catch {
     return blocked(403);
   }
