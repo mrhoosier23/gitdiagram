@@ -15,7 +15,7 @@
 - `src/lib/private-instance.test.ts`: regression cases for absent/wrong Access identity, absent configuration, wrong audience, owner access to core diagram routes, public endpoint denial and no-store/noindex headers.
 - **Separate draft Wrangler configurations:** `wrangler.private.jsonc`, `wrangler.private.server.jsonc`, `wrangler.private.server-local.jsonc`. These use different Worker and cache-bucket names, turn IndexNow off, remove public cron triggers and tail-worker bindings, disable direct `workers.dev` and preview URLs, and set `PRIVATE_INSTANCE_ENABLED=1`.
 
-**The new Wrangler files are deliberately drafts.** They cannot be considered deployed or runtime-verified. They do not create any Cloudflare resources. Their placeholder `SITE_ORIGIN` must be replaced with a verified private hostname. The upstream `wrangler.jsonc` and production deployment workflow are untouched.
+**The new Wrangler files are deliberately drafts.** They cannot be considered deployed or runtime-verified. They do not create any Cloudflare resources. Their placeholder `SITE_ORIGIN` must be replaced with a verified private hostname. The upstream `wrangler.jsonc` and production deployment workflow are untouched. `src/lib/site.ts` now accepts the build-time `NEXT_PUBLIC_SITE_ORIGIN` override, but the private origin has not been selected or wired into a separate build/release process.
 
 ## 2. Intended private topology
 
@@ -45,7 +45,7 @@ Cloudflare references:
 2. **Cloudflare resource ownership.** Choose an account, but keep JARVIS's Workers, routes, R2, secrets, names and queues untouched. Create three *new* named Workers and a new R2 Next cache bucket matching the draft configs. Create **separate non-public R2 artifact buckets** for `R2_PUBLIC_BUCKET` and `R2_PRIVATE_BUCKET`; the first name is historical and must not imply a public website or R2 public hostname. Ensure `r2.dev` and custom-domain public access are disabled for these buckets.
 3. **Zero Trust Access before exposure.** Provision a deny-all stub Worker first, then protect that *Worker* through Access for exactly one verified email and all traffic, including previews. Confirm static assets are gated before replacing the stub with GitDiagram. Never create a publicly reachable unprotected production GitDiagram Worker as a bootstrap step.
 4. **Runtime credentials.** After permission to configure resources is explicitly granted, set `PRIVATE_ALLOWED_EMAIL` and `PRIVATE_ACCESS_AUD` only as protected runtime values for the routing Worker. Use a separate OpenAI API project/key, R2 credentials, `CACHE_KEY_SECRET`, and dedicated Upstash Redis credentials. Do not put values in the fork, CLI arguments, logs, browser code, or chat. Enable spending controls appropriate to the account.
-5. **Domain and generated links.** Replace `https://set-private-origin.invalid` in the private Wrangler configs with the verified private site origin, and audit the remaining upstream `gitdiagram.com` URLs in `src/lib/site.ts`, UI links, social metadata and API redirects. Use a private, same-origin URL throughout. **This URL-rewrite step remains unimplemented** because the private hostname has not been selected.
+5. **Domain and generated links.** Replace `https://set-private-origin.invalid` in the private Wrangler configs with the verified private site origin. `src/lib/site.ts` now supports the build-time `NEXT_PUBLIC_SITE_ORIGIN` override, but no actual hostname or private build variable has been supplied. Audit other upstream `gitdiagram.com` URLs in UI links, social metadata and redirects. **This site-origin integration is only partially prepared**, not verified end-to-end.
 6. **Private-only build/deploy procedure.** Create a dedicated deployment script or CI workflow that uses **only** the three private Wrangler configurations, scopes account IDs and build variables deliberately, does not deploy the upstream edge Worker, and never routes to `gitdiagram.com` or JARVIS. The original multi-Worker deployment script is **not safe to reuse as-is**. A private deployment procedure has not yet been implemented or run.
 7. **Internal service calls.** Validate cache invalidation and read-back flows with the new Access gate. Service-binding invocations of the routing Worker do not inherit Access context, so some upstream self-reference paths may be denied until a narrowly scoped, separately authenticated internal-call mechanism is developed. **Do not bypass the gate globally.**
 8. **Static-asset and route QA.** Access must protect every Worker-hosted static asset, HTML, `/_next` path, RSC response, API, Worker preview URL and optional domain. An application-level 403 on dynamic routes is not proof that static assets are private.
@@ -56,6 +56,7 @@ Cloudflare references:
 Local commands are **checks only**, not deployment:
 
 ```bash
+node scripts/check-private-config.mjs
 bun ci
 bun run lint
 bun run typecheck
@@ -95,7 +96,7 @@ Required live acceptance checks **after separate deployment authorization**:
 
 ## 6. Honest status and smallest resume point
 
-**Completed in the fork:** private-mode access guard, public-surface restrictions, suppression of discovery writes, unit-test source, and isolated **draft** Wrangler configurations.
+**Completed in the fork:** private-mode access guard, public-surface restrictions, suppression of discovery writes, unit-test source, build-time site-origin override, offline structural checker, and isolated **draft** Wrangler configurations.
 
 **Not completed:** private standalone repository, new Cloudflare Access policy, private hostname, R2/Redis provisioning, secret setup, private deploy script, full build/typecheck/CI, private UI smoke test, end-to-end persistence and live privacy verification.
 
