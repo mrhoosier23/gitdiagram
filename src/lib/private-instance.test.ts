@@ -13,7 +13,10 @@ const env: PrivateInstanceEnv = {
   PRIVATE_ACCESS_AUD: "the-private-access-app",
 };
 
-function signedIn(email: string, aud = "the-private-access-app"): PrivateAccessContext {
+function signedIn(
+  email: string,
+  aud = "the-private-access-app",
+): PrivateAccessContext {
   return {
     access: {
       aud,
@@ -44,8 +47,13 @@ describe("private instance Cloudflare Access gate", () => {
       { ...env, PRIVATE_ACCESS_AUD: undefined },
     ]) {
       expect(
-        (await rejectUnauthorizedPrivateRequest(configured, signedIn("owner@example.com"), "/"))
-          ?.status,
+        (
+          await rejectUnauthorizedPrivateRequest(
+            configured,
+            signedIn("owner@example.com"),
+            "/",
+          )
+        )?.status,
       ).toBe(403);
     }
   });
@@ -71,14 +79,26 @@ describe("private instance Cloudflare Access gate", () => {
   it("fails closed on identity lookup errors", async () => {
     const result = await rejectUnauthorizedPrivateRequest(
       env,
-      { access: { aud: env.PRIVATE_ACCESS_AUD, getIdentity: async () => { throw new Error("auth unavailable"); } } },
+      {
+        access: {
+          aud: env.PRIVATE_ACCESS_AUD,
+          getIdentity: async () => {
+            throw new Error("auth unavailable");
+          },
+        },
+      },
       "/",
     );
     expect(result?.status).toBe(403);
   });
 
   it("allows only the chosen email on normal diagram and generation routes", async () => {
-    for (const path of ["/", "/owner/repo", "/api/generate/stream", "/api/diagram-state"]) {
+    for (const path of [
+      "/",
+      "/owner/repo",
+      "/api/generate/stream",
+      "/api/diagram-state",
+    ]) {
       const result = await rejectUnauthorizedPrivateRequest(
         env,
         signedIn(" Owner@Example.com "),
@@ -90,11 +110,24 @@ describe("private instance Cloudflare Access gate", () => {
 
   it("denies public features even to the owner", async () => {
     for (const path of [
-      "/mcp", "/mcp/", "/browse", "/videos", "/api/video/generate",
-      "/api/internal/audit", "/api/diagram-preview", "/api/admin",
-      "/api/sponsor", "/phx9a/capture", "/admin", "/out/a",
-      "/robots.txt", "/sitemap_index.xml", "/sitemap-1.xml",
-      "/m%63p", "/API/VIDEO", "/api/indexnow-key",
+      "/mcp",
+      "/mcp/",
+      "/browse",
+      "/videos",
+      "/api/video/generate",
+      "/api/internal/audit",
+      "/api/diagram-preview",
+      "/api/admin",
+      "/api/sponsor",
+      "/phx9a/capture",
+      "/admin",
+      "/out/a",
+      "/robots.txt",
+      "/sitemap_index.xml",
+      "/sitemap-1.xml",
+      "/m%63p",
+      "/API/VIDEO",
+      "/api/indexnow-key",
     ]) {
       expect(privateSurfaceDenied(path)).toBe(true);
       const result = await rejectUnauthorizedPrivateRequest(
@@ -108,14 +141,22 @@ describe("private instance Cloudflare Access gate", () => {
   });
 
   it("does not block expected diagram editor assets", () => {
-    for (const path of ["/", "/_next/static/chunk.js", "/api/generate/cost", "/owner/repo"]) {
+    for (const path of [
+      "/",
+      "/_next/static/chunk.js",
+      "/api/generate/cost",
+      "/owner/repo",
+    ]) {
       expect(privateSurfaceDenied(path)).toBe(false);
     }
   });
 
   it("marks successful private responses non-cacheable and non-indexable", async () => {
     const initial = new Response("secret graph", {
-      headers: { "Cache-Control": "public, max-age=3600", "Content-Type": "text/plain" },
+      headers: {
+        "Cache-Control": "public, max-age=3600",
+        "Content-Type": "text/plain",
+      },
     });
     const result = privateResponseHeaders(initial, true);
     expect(result.status).toBe(200);
