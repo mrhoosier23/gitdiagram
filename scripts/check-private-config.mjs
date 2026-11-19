@@ -49,12 +49,15 @@ for (const [file, name] of Object.entries(configFiles)) {
 
 const routing = readFileSync("cloudflare/worker.ts", "utf8");
 const gate = readFileSync("src/lib/private-instance.ts", "utf8");
+const signedJwt = readFileSync("src/lib/access-jwt.ts", "utf8");
 const index = readFileSync("src/server/storage/diagram-state.ts", "utf8");
 const indexNow = readFileSync("src/server/visibility/indexnow.ts", "utf8");
 
 for (const [name, condition] of [
   ["routing Worker owner gate", routing.includes("rejectUnauthorizedPrivateRequest")],
   ["Cloudflare Access identity check", gate.includes("ctx.access")],
+  ["signed JWT verification", gate.includes("verifyCloudflareAccessJwt")],
+  ["cryptographic JWT validation", signedJwt.includes("crypto.subtle.verify")],
   ["private public-index suppression", index.includes('PRIVATE_INSTANCE_ENABLED === "1"')],
   ["private IndexNow suppression", indexNow.includes('PRIVATE_INSTANCE_ENABLED !== "1"')],
 ]) {
