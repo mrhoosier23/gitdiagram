@@ -45,7 +45,8 @@ function blocked(status: 403 | 404): Response {
 export function privateSurfaceDenied(pathname: string): boolean {
   let path: string;
   try {
-    path = decodeURIComponent(pathname).toLowerCase().replace(/\/+$/, "") || "/";
+    path =
+      decodeURIComponent(pathname).toLowerCase().replace(/\/+$/, "") || "/";
   } catch {
     return true;
   }
@@ -92,7 +93,9 @@ export function privateSurfaceDenied(pathname: string): boolean {
     "/.well-known/openai-apps-challenge",
   ];
   return prefixes.some(
-    (prefix) => path === prefix || path.startsWith(prefix.endsWith("/") ? prefix : `${prefix}/`),
+    (prefix) =>
+      path === prefix ||
+      path.startsWith(prefix.endsWith("/") ? prefix : `${prefix}/`),
   );
 }
 
@@ -112,7 +115,12 @@ export async function rejectUnauthorizedPrivateRequest(
   const allowedEmail = env.PRIVATE_ALLOWED_EMAIL?.trim().toLowerCase();
   const allowedAudience = env.PRIVATE_ACCESS_AUD?.trim();
   const access = ctx.access;
-  if (!allowedEmail || !allowedAudience || !access || access.aud !== allowedAudience)
+  if (
+    !allowedEmail ||
+    !allowedAudience ||
+    !access ||
+    access.aud !== allowedAudience
+  )
     return blocked(403);
 
   let identity: { email?: string | null } | null | undefined;
@@ -121,7 +129,8 @@ export async function rejectUnauthorizedPrivateRequest(
   } catch {
     return blocked(403);
   }
-  if (identity?.email?.trim().toLowerCase() !== allowedEmail) return blocked(403);
+  if (identity?.email?.trim().toLowerCase() !== allowedEmail)
+    return blocked(403);
 
   return privateSurfaceDenied(pathname) ? blocked(404) : null;
 }
