@@ -30,7 +30,13 @@ export function indexNowKey(): string | null {
 }
 
 function enabled() {
-  return indexNowKey() !== null && process.env.INDEXNOW_ENABLED === "1";
+  // Private diagrams must never be announced, even if an inherited setting
+  // accidentally enables IndexNow.
+  return (
+    process.env.PRIVATE_INSTANCE_ENABLED !== "1" &&
+    indexNowKey() !== null &&
+    process.env.INDEXNOW_ENABLED === "1"
+  );
 }
 
 /** Only this site's own absolute URLs, once each. */
