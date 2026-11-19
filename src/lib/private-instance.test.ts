@@ -11,6 +11,7 @@ const env: PrivateInstanceEnv = {
   PRIVATE_INSTANCE_ENABLED: "1",
   PRIVATE_ALLOWED_EMAIL: "owner@example.com",
   PRIVATE_ACCESS_AUD: "the-private-access-app",
+  PRIVATE_ACCESS_TEAM_DOMAIN: "example.cloudflareaccess.com",
 };
 
 function signedIn(
@@ -18,97 +19,105 @@ function signedIn(
   aud = "the-private-access-app",
 ): PrivateAccessContext {
   return {
-    access: {
-      aud,
-      getIdentity: vi.fn().mockResolvedValue({ email }),
-    },
+    access: { aud, getIdentity: vi.fn().mockResolvedValue({ email }) },
   };
 }
 
-describe("private instance Cloudflare Access gate", () => {
-  it("leaves the existing public instance unchanged when explicitly disabled", async () => {
-    const result = await rejectUnauthorizedPrivateRequest(
-      { PRIVATE_INSTANCE_ENABLED: "0" },
-      {},
-      "/",
-    );
-    expect(result).toBeNull();
-  });
+function request(path: string): Request {
+  return new Request(`https://private.example.com${path}`);
+}
 
-  it("denies requests without Cloudflare-attested Access context", async () => {
-    const result = await rejectUnauthorizedPrivateRequest(env, {}, "/");
-    expect(result?.status).toBe(403);
-    expect(result?.headers.get("cache-control")).toContain("no-store");
-  });
-
-  it("denies missing configuration even if Access authenticated the caller", async () => {
-    for (const configured of [
-      { ...env, PRIVATE_ALLOWED_EMAIL: "" },
-      { ...env, PRIVATE_ACCESS_AUD: undefined },
-    ]) {
+describe("private Cloudflare Access gate", () => {
+  it("denies when private mode is missing or explicitly disabled", async () => {
+    for (const value of [undefined, "0"]) {
       expect(
         (
           await rejectUnauthorizedPrivateRequest(
-            configured,
+            { ...env, PRIVATE_INSTANCE_ENABLED: value },
             signedIn("owner@example.com"),
-            "/",
+            request("/"),
           )
         )?.status,
       ).toBe(403);
     }
   });
 
-  it("requires the exact Access application audience", async () => {
-    const result = await rejectUnauthorizedPrivateRequest(
+  it("denies requests without Cloudflare-attested access or JWT", async () => {
+    const response = await rejectUnauthorizedPrivateRequest(
+      env,
+      {},
+      request("/"),
+    );
+    expect(response?.status).toBe(403);
+    expect(response?.headers.get("cache-control")).toContain("no-store");
+  });
+
+  it("denies missing identity or Access configuration", async () => {
+    for (const configured of [
+      { ...env, PRIVATE_ALLOWED_EMAIL: "" },
+      { ...env, PRIVATE_ACCESS_AUD: undefined },
+      { ...env, PRIVATE_ACCESS_TEAM_DOMAIN: "" },
+    ]) {
+      const response = await rejectUnauthorizedPrivateRequest(
+        configured,
+        signedIn("owner@example.com"),
+        request("/"),
+      );
+      expect(response?.status).toBe(403);
+    }
+  });
+
+  it("requires the exact authenticated Access audience", async () => {
+    const response = await rejectUnauthorizedPrivateRequest(
       env,
       signedIn("owner@example.com", "another-app"),
-      "/",
+      request("/"),
     );
-    expect(result?.status).toBe(403);
+    expect(response?.status).toBe(403);
   });
 
-  it("denies other users even if they have a valid Access session", async () => {
-    const result = await rejectUnauthorizedPrivateRequest(
+  it("denies a different signed-in user", async () => {
+    const response = await rejectUnauthorizedPrivateRequest(
       env,
       signedIn("someone@example.com"),
-      "/",
+      request("/"),
     );
-    expect(result?.status).toBe(403);
+    expect(response?.status).toBe(403);
   });
 
-  it("fails closed on identity lookup errors", async () => {
-    const result = await rejectUnauthorizedPrivateRequest(
+  it("fails closed if an Access identity lookup throws", async () => {
+    const response = await rejectUnauthorizedPrivateRequest(
       env,
       {
         access: {
           aud: env.PRIVATE_ACCESS_AUD,
           getIdentity: async () => {
-            throw new Error("auth unavailable");
+            throw new Error("identity unavailable");
           },
         },
       },
-      "/",
+      request("/"),
     );
-    expect(result?.status).toBe(403);
+    expect(response?.status).toBe(403);
   });
 
-  it("allows only the chosen email on normal diagram and generation routes", async () => {
+  it("permits the owner's normal diagram and generation routes", async () => {
     for (const path of [
       "/",
       "/owner/repo",
       "/api/generate/stream",
       "/api/diagram-state",
     ]) {
-      const result = await rejectUnauthorizedPrivateRequest(
+      const response = await rejectUnauthorizedPrivateRequest(
         env,
         signedIn(" Owner@Example.com "),
-        path,
+        request(path),
       );
-      expect(result).toBeNull();
+      expect(response).toBeNull();
     }
   });
 
-  it("denies public features even to the owner", async () => {
+  it("blocks the public discovery, video, analytics and MCP surfaces", async () => {
     for (const path of [
       "/mcp",
       "/mcp/",
@@ -130,17 +139,17 @@ describe("private instance Cloudflare Access gate", () => {
       "/api/indexnow-key",
     ]) {
       expect(privateSurfaceDenied(path)).toBe(true);
-      const result = await rejectUnauthorizedPrivateRequest(
+      const response = await rejectUnauthorizedPrivateRequest(
         env,
         signedIn("owner@example.com"),
-        path,
+        request(path),
       );
-      expect(result?.status).toBe(404);
-      expect(result?.headers.get("x-robots-tag")).toContain("noindex");
+      expect(response?.status).toBe(404);
+      expect(response?.headers.get("x-robots-tag")).toContain("noindex");
     }
   });
 
-  it("does not block expected diagram editor assets", () => {
+  it("leaves the editor and ordinary static-file paths available to Access", () => {
     for (const path of [
       "/",
       "/_next/static/chunk.js",
@@ -151,18 +160,16 @@ describe("private instance Cloudflare Access gate", () => {
     }
   });
 
-  it("marks successful private responses non-cacheable and non-indexable", async () => {
-    const initial = new Response("secret graph", {
-      headers: {
-        "Cache-Control": "public, max-age=3600",
-        "Content-Type": "text/plain",
-      },
-    });
-    const result = privateResponseHeaders(initial, true);
-    expect(result.status).toBe(200);
-    expect(result.headers.get("cache-control")).toBe("private, no-store");
-    expect(result.headers.get("x-robots-tag")).toContain("noindex");
-    expect(result.headers.get("referrer-policy")).toBe("no-referrer");
-    expect(await result.text()).toBe("secret graph");
+  it("sets private cache and search-engine headers", async () => {
+    const response = privateResponseHeaders(
+      new Response("secret graph", {
+        headers: { "Cache-Control": "public, max-age=3600" },
+      }),
+      true,
+    );
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect(response.headers.get("x-robots-tag")).toContain("noindex");
+    expect(response.headers.get("referrer-policy")).toBe("no-referrer");
+    expect(await response.text()).toBe("secret graph");
   });
 });
