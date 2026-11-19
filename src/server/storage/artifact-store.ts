@@ -213,6 +213,9 @@ export async function writePublicDiagramPreview(params: {
   diagram: string;
   lastSuccessfulAt: string;
 }): Promise<boolean> {
+  // The public preview is an independent discoverable artifact. A private
+  // installation retains only the canonical diagram in its isolated bucket.
+  if (process.env.PRIVATE_INSTANCE_ENABLED === "1") return false;
   const location = getPublicLocation(params.username, params.repo);
 
   // Deliberately reuses the canonical artifact's lock: the sidecar is only
