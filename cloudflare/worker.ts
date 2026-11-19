@@ -509,7 +509,7 @@ const worker = {
     const url = new URL(request.url);
     // Verify Cloudflare-attested identity BEFORE cached pages, assets or APIs.
     // A missing Access policy/identity denies every private-mode request.
-    const denied = await rejectUnauthorizedPrivateRequest(env, ctx, url.pathname);
+    const denied = await rejectUnauthorizedPrivateRequest(env, ctx, request);
     if (denied) return denied;
     if (isContainerPath(url.pathname))
       return privateResponseHeaders(
