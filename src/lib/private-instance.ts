@@ -9,8 +9,12 @@
  * Service bindings do not propagate ctx.access. The private topology therefore
  * enters through this routing Worker directly; do not use gitdiagram-edge.
  */
+import { verifyCloudflareAccessJwt } from "./access-jwt";
+
 export interface PrivateInstanceEnv {
   PRIVATE_INSTANCE_ENABLED?: string;
+  /** Your Cloudflare Access team domain, e.g. team.cloudflareaccess.com. */
+  PRIVATE_ACCESS_TEAM_DOMAIN?: string;
   /** Set as a runtime secret, never checked into Git. */
   PRIVATE_ALLOWED_EMAIL?: string;
   /** Cloudflare Access application AUD tag; different from a user's email. */
@@ -100,38 +104,48 @@ export function privateSurfaceDenied(pathname: string): boolean {
 }
 
 /**
- * Never accept a user-supplied JWT header as proof of identity. ctx.access is
- * Cloudflare-attested after the Worker-level Access policy authenticates the
- * request. Missing configuration, wrong AUD, wrong email or lookup failure all
- * deny access. Only one specific email is allowed, not an email domain.
+ * `ctx.access` is trustworthy when present, but the Cloudflare static-assets
+ * router often drops it. Then validate the signed Access assertion against
+ * the tenant's JWKS; NEVER trust the unverified JWT payload or request email.
+ *
+ * PRIVATE_INSTANCE_ENABLED must be explicitly set: an omitted configuration
+ * does not silently turn a private branch into a public installation.
  */
 export async function rejectUnauthorizedPrivateRequest(
   env: PrivateInstanceEnv,
   ctx: PrivateAccessContext,
-  pathname: string,
+  request: Request,
 ): Promise<Response | null> {
-  if (env.PRIVATE_INSTANCE_ENABLED !== "1") return null;
+  if (env.PRIVATE_INSTANCE_ENABLED !== "1") return blocked(403);
 
   const allowedEmail = env.PRIVATE_ALLOWED_EMAIL?.trim().toLowerCase();
   const allowedAudience = env.PRIVATE_ACCESS_AUD?.trim();
-  const access = ctx.access;
-  if (
-    !allowedEmail ||
-    !allowedAudience ||
-    !access ||
-    access.aud !== allowedAudience
-  )
-    return blocked(403);
+  const teamDomain = env.PRIVATE_ACCESS_TEAM_DOMAIN?.trim();
+  if (!allowedEmail || !allowedAudience || !teamDomain) return blocked(403);
 
-  let identity: { email?: string | null } | null | undefined;
-  try {
-    identity = await access.getIdentity();
-  } catch {
-    return blocked(403);
+  let authenticated = false;
+  if (ctx.access) {
+    if (ctx.access.aud !== allowedAudience) return blocked(403);
+    try {
+      const identity = await ctx.access.getIdentity();
+      authenticated =
+        identity?.email?.trim().toLowerCase() === allowedEmail;
+    } catch {
+      return blocked(403);
+    }
+  } else {
+    authenticated = await verifyCloudflareAccessJwt(
+      request.headers.get("cf-access-jwt-assertion"),
+      {
+        teamDomain,
+        audience: allowedAudience,
+        allowedEmail,
+      },
+    );
   }
-  if (identity?.email?.trim().toLowerCase() !== allowedEmail)
-    return blocked(403);
 
+  if (!authenticated) return blocked(403);
+  const pathname = new URL(request.url).pathname;
   return privateSurfaceDenied(pathname) ? blocked(404) : null;
 }
 
