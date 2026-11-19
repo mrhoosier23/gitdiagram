@@ -157,6 +157,9 @@ export async function updatePublicBrowseIndexForSuccessfulDiagram(params: {
   stargazerCount: number | null;
   language: string | null;
 }) {
+  // A private installation never publishes its analyzed repositories to a
+  // browse index, even when GitHub itself marks the source repository public.
+  if (process.env.PRIVATE_INSTANCE_ENABLED === "1") return;
   await upsertBrowseIndexEntry({
     username: params.username,
     repo: params.repo,
