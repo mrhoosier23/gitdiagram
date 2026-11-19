@@ -50,6 +50,12 @@ import {
   takeWantedEntry,
 } from "../src/lib/colo-cache";
 import { entersProxy, proxyDecision } from "../src/lib/proxy-rules";
+import {
+  privateResponseHeaders,
+  rejectUnauthorizedPrivateRequest,
+  type PrivateAccessContext,
+  type PrivateInstanceEnv,
+} from "../src/lib/private-instance";
 
 import {
   forwardToRender,
@@ -90,7 +96,7 @@ interface RateLimit {
 type RateLimits = { [Name in EdgeRateLimit]?: RateLimit };
 
 // RenderEnv: the render containers' bindings (RENDER, GENERATE) and settings.
-interface Env extends RateLimits, RenderEnv {
+interface Env extends RateLimits, RenderEnv, PrivateInstanceEnv {
   WORKER_SELF_REFERENCE: Fetcher;
   /** The Next.js server (cloudflare/server.ts, Worker `gitdiagram-server`). */
   SERVER: Fetcher;
@@ -113,7 +119,7 @@ interface Env extends RateLimits, RenderEnv {
   SITE_ORIGIN?: string;
 }
 
-interface Context {
+interface Context extends PrivateAccessContext {
   waitUntil(promise: Promise<unknown>): void;
 }
 
@@ -501,8 +507,15 @@ let isolateHasServed = false;
 const worker = {
   async fetch(request: Request, env: Env, ctx: Context): Promise<Response> {
     const url = new URL(request.url);
+    // Verify Cloudflare-attested identity BEFORE cached pages, assets or APIs.
+    // A missing Access policy/identity denies every private-mode request.
+    const denied = await rejectUnauthorizedPrivateRequest(env, ctx, url.pathname);
+    if (denied) return denied;
     if (isContainerPath(url.pathname))
-      return visitorResponse(await container(request, env, url), url, true);
+      return privateResponseHeaders(
+        visitorResponse(await container(request, env, url), url, true),
+        env.PRIVATE_INSTANCE_ENABLED === "1",
+      );
     const startedAt = Date.now();
     const firstInIsolate = !isolateHasServed;
     isolateHasServed = true;
@@ -523,7 +536,10 @@ const worker = {
         ...cacheTimings(ctx),
       ].join(", "),
     );
-    return answer;
+    return privateResponseHeaders(
+      answer,
+      env.PRIVATE_INSTANCE_ENABLED === "1",
+    );
   },
 
   // Cloudflare cron triggers stand in for Vercel's crons: the same routes,
