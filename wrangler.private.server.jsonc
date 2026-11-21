@@ -43,11 +43,17 @@
   "services": [
     // Calls the app makes to itself (the revalidation queue, the container's
     // page refresh) enter through the site's Worker, as a visitor's would.
-    { "binding": "WORKER_SELF_REFERENCE", "service": "andrew-gitdiagram-private" },
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "andrew-gitdiagram-private",
+    },
     // The server next to the data (itself, in wrangler.server.jsonc): a page
     // revalidated anywhere is dropped from its copies too
     // (src/lib/colo-cache.ts).
-    { "binding": "PLACED_SERVER", "service": "andrew-gitdiagram-private-server" },
+    {
+      "binding": "PLACED_SERVER",
+      "service": "andrew-gitdiagram-private-server",
+    },
   ],
   "r2_buckets": [
     {
