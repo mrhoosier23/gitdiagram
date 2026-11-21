@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  // Deployment only AFTER explicit authorization. It does not serve GitDiagram.
+  // The Worker has no public workers.dev or preview URL until a protected custom
+  // hostname is deliberately attached. Keep the same Worker name for later.
+  "name": "andrew-gitdiagram-private",
+  "main": "cloudflare/private-access-stub.ts",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "assets": {
+    "directory": "./private-access-fixture",
+    "binding": "ASSETS",
+    "html_handling": "none",
+    "run_worker_first": true,
+  },
+  "vars": {
+    "PRIVATE_INSTANCE_ENABLED": "1",
+  },
+}
