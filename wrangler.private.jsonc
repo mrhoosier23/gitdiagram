@@ -71,42 +71,9 @@
   // New video generation and rendering endpoints are denied in private mode.
   // Vercel's four firewall rate limits (requests per minute per address);
   // cloudflare/worker.ts applies them before the app runs.
-  "ratelimits": [
-    {
-      "name": "LIMIT_GENERATE_STREAM",
-      "namespace_id": "4721",
-      "simple": { "limit": 20, "period": 60 },
-    },
-    {
-      "name": "LIMIT_GENERATE_COST",
-      "namespace_id": "4722",
-      "simple": { "limit": 60, "period": 60 },
-    },
-    {
-      "name": "LIMIT_GENERATE_CANCEL",
-      "namespace_id": "4723",
-      "simple": { "limit": 60, "period": 60 },
-    },
-    {
-      "name": "LIMIT_DIAGRAM_STATE",
-      "namespace_id": "4724",
-      "simple": { "limit": 120, "period": 60 },
-    },
-    {
-      // Starting a video or an MP4 wakes a container (see cloudflare-edge.ts).
-      "name": "LIMIT_VIDEO_START",
-      "namespace_id": "4725",
-      "simple": { "limit": 30, "period": 60 },
-    },
-    {
-      // A cost guard, not a Vercel rule: repository pages (and their social
-      // pictures) one address may ask for in a minute. An uncached one costs
-      // a render and two R2 writes.
-      "name": "LIMIT_REPO_PAGE",
-      "namespace_id": "4726",
-      "simple": { "limit": 120, "period": 60 },
-    },
-  ],
+  // Do not borrow the upstream account's rate-limit namespace IDs.
+  // Private generation retains its dedicated Redis quotas. A future dedicated
+  // edge limiter needs independently allocated account-unique namespace IDs.
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS",
