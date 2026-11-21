@@ -35,19 +35,12 @@ interface AccessJwtClaims {
   iat?: unknown;
 }
 
-const cachedKeys = new Map<
-  string,
-  { at: number; keys: AccessJwk[] }
->();
+const cachedKeys = new Map<string, { at: number; keys: AccessJwk[] }>();
 
 function issuerFromTeamDomain(teamDomain: string): string | null {
   const raw = teamDomain.trim().toLowerCase();
-  const hostname = raw
-    .replace(/^https:\/\//, "")
-    .replace(/\/$/, "");
-  if (
-    !/^[a-z0-9][a-z0-9-]*\.cloudflareaccess\.com$/.test(hostname)
-  ) {
+  const hostname = raw.replace(/^https:\/\//, "").replace(/\/$/, "");
+  if (!/^[a-z0-9][a-z0-9-]*\.cloudflareaccess\.com$/.test(hostname)) {
     return null;
   }
   return `https://${hostname}`;
