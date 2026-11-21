@@ -80,3 +80,6 @@ venv
 .video-cache/
 /wrangler.staging*.jsonc
 /wrangler.deploy.jsonc
+
+# Generated from offline private-deployment drafts (no live settings)
+/.wrangler-private*-generated.jsonc
