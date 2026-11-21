@@ -19,7 +19,7 @@ const headers = {
   "X-Robots-Tag": "noindex, nofollow, nosnippet",
 };
 
-export default {
+const privateAccessStub = {
   async fetch(request: Request, env: Env, ctx: PrivateAccessContext) {
     const blocked = await rejectUnauthorizedPrivateRequest(env, ctx, request);
     if (blocked) return blocked;
@@ -39,3 +39,5 @@ export default {
     return new Response("Not found", { status: 404, headers });
   },
 };
+
+export default privateAccessStub;
