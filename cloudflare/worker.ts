@@ -536,10 +536,7 @@ const worker = {
         ...cacheTimings(ctx),
       ].join(", "),
     );
-    return privateResponseHeaders(
-      answer,
-      env.PRIVATE_INSTANCE_ENABLED === "1",
-    );
+    return privateResponseHeaders(answer, env.PRIVATE_INSTANCE_ENABLED === "1");
   },
 
   // Cloudflare cron triggers stand in for Vercel's crons: the same routes,
