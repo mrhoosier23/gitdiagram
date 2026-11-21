@@ -29,6 +29,7 @@ for (const [file, name] of Object.entries(configFiles)) {
     /"routes"\s*:/,
     /"route"\s*:/,
     /"tail_consumers"\s*:/,
+    /"ratelimits"\s*:/,
     /"INDEXNOW_ENABLED"\s*:\s*"1"/,
     /"SITE_ORIGIN"\s*:\s*"https:\/\/gitdiagram\.com"/,
     /"(?:name|service|script_name)"\s*:\s*"gitdiagram(?:-server(?:-local)?)?"/,

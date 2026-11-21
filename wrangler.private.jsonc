@@ -69,8 +69,7 @@
   // alone.
   // Deliberately no Containers in the private diagram-only configuration.
   // New video generation and rendering endpoints are denied in private mode.
-  // Vercel's four firewall rate limits (requests per minute per address);
-  // cloudflare/worker.ts applies them before the app runs.
+  // No upstream Cloudflare rate-limit namespace IDs are reused.
   // Do not borrow the upstream account's rate-limit namespace IDs.
   // Private generation retains its dedicated Redis quotas. A future dedicated
   // edge limiter needs independently allocated account-unique namespace IDs.

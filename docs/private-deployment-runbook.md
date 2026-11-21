@@ -83,7 +83,7 @@ Keep everything separate from existing services. A dedicated new Cloudflare acco
 | GitHub source reads | Narrow, read-only GitHub credential if private repositories are needed | Do not grant write or organization-wide permissions by default |
 | Access | One owner-only Worker-level application | Verify policy, team issuer, audience, and JWT behavior on every reachable URL |
 
-The new full-application config intentionally omits the paid explainer-video Containers and upstream scheduled tasks. It also blocks public MCP, browse, videos, analytics, sponsor endpoints, public preview artifacts and automatic IndexNow submission.
+The new full-application config intentionally omits the paid explainer-video Containers and upstream scheduled tasks. It also omits the original Cloudflare rate-limit namespace IDs because equal IDs share counters within the same account. It also blocks public MCP, browse, videos, analytics, sponsor endpoints, public preview artifacts and automatic IndexNow submission.
 
 Do **not** supply the original deployment script `scripts/cf-deploy.sh` or its default `CF_ENV_FILE`: it contains upstream resource/account assumptions and can affect the real GitDiagram service.
 

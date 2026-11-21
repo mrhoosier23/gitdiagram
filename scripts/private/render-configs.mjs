@@ -108,7 +108,8 @@ for (const [template, destination] of templates) {
       source.includes('"triggers":') ||
       source.includes('"routes":') ||
       source.includes('"tail_consumers":') ||
-      source.includes('"containers":')) {
+      source.includes('"containers":') ||
+      source.includes('"ratelimits":')) {
     fail(`unsafe deployment surface in ${template}`);
   }
   if (template === "wrangler.private.jsonc" &&
