@@ -60,6 +60,7 @@ bash scripts/cf-build.sh
 
 # No deployment flags are accepted. --dry-run emits build artifacts locally.
 for config in \
+  wrangler.private.stub.jsonc \
   .wrangler-private-server-generated.jsonc \
   .wrangler-private-server-local-generated.jsonc \
   .wrangler-private-generated.jsonc; do
