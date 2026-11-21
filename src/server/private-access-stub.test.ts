@@ -43,7 +43,11 @@ describe("private pre-deployment Access stub", () => {
   });
 
   it("returns 404 on unexpected routes even for the owner", async () => {
-    const response = await stub.fetch(request("/api/generate/stream"), env, owner);
+    const response = await stub.fetch(
+      request("/api/generate/stream"),
+      env,
+      owner,
+    );
     expect(response.status).toBe(404);
   });
 });
