@@ -137,7 +137,8 @@ async function checkSignature(
     return crypto.subtle.verify(
       "RSASSA-PKCS1-v1_5",
       publicKey,
-      signature,
+      // Copy to an ArrayBuffer-backed view for TypeScript 7's BufferSource type.
+      new Uint8Array(signature),
       new TextEncoder().encode(input),
     );
   }
@@ -161,10 +162,12 @@ export async function verifyCloudflareAccessJwt(
   }
   const parts = assertion.split(".");
   if (parts.length !== 3) return false;
+  const [encodedHeader, encodedClaims, encodedSignature] = parts;
+  if (!encodedHeader || !encodedClaims || !encodedSignature) return false;
 
-  const header = decodeJsonPart<AccessJwtHeader>(parts[0]);
-  const claims = decodeJsonPart<AccessJwtClaims>(parts[1]);
-  const signature = decodeBase64Url(parts[2]);
+  const header = decodeJsonPart<AccessJwtHeader>(encodedHeader);
+  const claims = decodeJsonPart<AccessJwtClaims>(encodedClaims);
+  const signature = decodeBase64Url(encodedSignature);
   if (
     !header ||
     header.alg !== "RS256" ||
@@ -203,7 +206,7 @@ export async function verifyCloudflareAccessJwt(
     return await checkSignature(
       issuer,
       header.kid,
-      `${parts[0]}.${parts[1]}`,
+      `${encodedHeader}.${encodedClaims}`,
       signature,
     );
   } catch {
