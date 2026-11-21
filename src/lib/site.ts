@@ -9,5 +9,4 @@ export const SITE_URL = customOrigin
   ? new URL(customOrigin).origin
   : "https://gitdiagram.com";
 
-export const GITHUB_REPO_URL =
-  "https://github.com/ahmedkhaleel2004/gitdiagram";
+export const GITHUB_REPO_URL = "https://github.com/ahmedkhaleel2004/gitdiagram";
