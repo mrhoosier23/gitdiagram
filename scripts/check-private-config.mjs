@@ -53,7 +53,9 @@ const stubCode = readFileSync("cloudflare/private-access-stub.ts", "utf8");
 if (!stubConfig.includes('"workers_dev": false') ||
     !stubConfig.includes('"preview_urls": false') ||
     !stubConfig.includes('"run_worker_first": true') ||
-    !stubCode.includes("rejectUnauthorizedPrivateRequest")) {
+    !stubCode.includes("rejectUnauthorizedPrivateRequest") ||
+    !stubConfig.includes("private-access-stub-worker.ts") ||
+    !stubConfig.includes('"new_sqlite_classes"')) {
   failed = true;
   console.error("Private Access stub must be fail-closed and protect static assets");
 }

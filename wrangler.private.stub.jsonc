@@ -4,7 +4,7 @@
   // The Worker has no public workers.dev or preview URL until a protected custom
   // hostname is deliberately attached. Keep the same Worker name for later.
   "name": "andrew-gitdiagram-private",
-  "main": "cloudflare/private-access-stub.ts",
+  "main": "cloudflare/private-access-stub-worker.ts",
   "compatibility_date": "2026-09-01",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": false,
@@ -18,4 +18,23 @@
   "vars": {
     "PRIVATE_INSTANCE_ENABLED": "1",
   },
+  // The private server Workers bind the OpenNext cache DO classes here.
+  // This stub owns their namespaces but never uses them for user requests.
+  "durable_objects": {
+    "bindings": [
+      { "name": "NEXT_CACHE_DO_QUEUE", "class_name": "DOQueueHandler" },
+      {
+        "name": "NEXT_TAG_CACHE_DO_SHARDED",
+        "class_name": "DOShardedTagCache",
+      },
+      { "name": "US_RELAY", "class_name": "UsRelay" },
+    ],
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["DOQueueHandler", "DOShardedTagCache"],
+    },
+    { "tag": "v3", "new_sqlite_classes": ["UsRelay"] },
+  ],
 }
