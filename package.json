@@ -33,7 +33,9 @@
     "perf:budget": "node scripts/check-performance-budgets.mjs",
     "check:video-tracing": "node scripts/check-video-render-tracing.mjs",
     "knip": "knip --reporter compact",
-    "prepare": "git rev-parse --is-inside-work-tree >/dev/null 2>&1 && git config core.hooksPath .githooks || true"
+    "prepare": "git rev-parse --is-inside-work-tree >/dev/null 2>&1 && git config core.hooksPath .githooks || true",
+    "private:verify": "bash scripts/private/offline-verify.sh",
+    "private:preflight": "node scripts/check-private-config.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.132.1",
@@ -128,7 +130,10 @@
       "scripts/video-pipeline-test.mjs",
       "scripts/compare-hosts.mjs",
       "scripts/cf-usage.mjs",
-      "scripts/bench.mjs"
+      "scripts/bench.mjs",
+      "scripts/check-private-config.mjs",
+      "scripts/private/render-configs.mjs",
+      "scripts/private/probe-anonymous.mjs"
     ],
     "ignore": [
       "experiments/**",
