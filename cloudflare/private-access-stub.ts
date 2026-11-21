@@ -34,10 +34,7 @@ export default {
       );
     }
     if (path === "/access-proof.txt") {
-      return privateResponseHeaders(
-        await env.ASSETS.fetch(request),
-        true,
-      );
+      return privateResponseHeaders(await env.ASSETS.fetch(request), true);
     }
     return new Response("Not found", { status: 404, headers });
   },
