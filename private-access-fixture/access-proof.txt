@@ -1,0 +1,1 @@
+This is a non-sensitive static-asset test fixture for private Cloudflare Access. It is not a diagram or user data.
