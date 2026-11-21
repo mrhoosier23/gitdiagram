@@ -118,13 +118,19 @@
     "run_worker_first": true,
   },
   "services": [
-    { "binding": "WORKER_SELF_REFERENCE", "service": "andrew-gitdiagram-private" },
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "andrew-gitdiagram-private",
+    },
     // The Next.js server (wrangler.server.jsonc): what the routing layer and
     // the page cache in this Worker cannot answer.
     { "binding": "SERVER", "service": "andrew-gitdiagram-private-server" },
     // The same server where the visitor is, for what is long or heavy
     // (wrangler.server-local.jsonc says why).
-    { "binding": "SERVER_LOCAL", "service": "andrew-gitdiagram-private-server-local" },
+    {
+      "binding": "SERVER_LOCAL",
+      "service": "andrew-gitdiagram-private-server-local",
+    },
   ],
   "r2_buckets": [
     {
