@@ -47,6 +47,16 @@ for (const [file, name] of Object.entries(configFiles)) {
   }
 }
 
+const stubConfig = readFileSync("wrangler.private.stub.jsonc", "utf8");
+const stubCode = readFileSync("cloudflare/private-access-stub.ts", "utf8");
+if (!stubConfig.includes('"workers_dev": false') ||
+    !stubConfig.includes('"preview_urls": false') ||
+    !stubConfig.includes('"run_worker_first": true') ||
+    !stubCode.includes("rejectUnauthorizedPrivateRequest")) {
+  failed = true;
+  console.error("Private Access stub must be fail-closed and protect static assets");
+}
+
 const routing = readFileSync("cloudflare/worker.ts", "utf8");
 const gate = readFileSync("src/lib/private-instance.ts", "utf8");
 const signedJwt = readFileSync("src/lib/access-jwt.ts", "utf8");
