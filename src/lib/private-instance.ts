@@ -128,8 +128,7 @@ export async function rejectUnauthorizedPrivateRequest(
     if (ctx.access.aud !== allowedAudience) return blocked(403);
     try {
       const identity = await ctx.access.getIdentity();
-      authenticated =
-        identity?.email?.trim().toLowerCase() === allowedEmail;
+      authenticated = identity?.email?.trim().toLowerCase() === allowedEmail;
     } catch {
       return blocked(403);
     }
