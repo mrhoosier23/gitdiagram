@@ -13,7 +13,8 @@ let privateKey: webcrypto.CryptoKey;
 let publicJwk: JsonWebKey;
 
 function b64(value: string | ArrayBuffer): string {
-  return Buffer.from(value).toString("base64url");
+  const bytes = typeof value === "string" ? Buffer.from(value) : Buffer.from(value);
+  return bytes.toString("base64url");
 }
 
 async function sign(
@@ -95,7 +96,9 @@ describe("Cloudflare Access signed JWT fallback", () => {
     mockCloudflareCerts();
     const valid = await sign(claims());
     const parts = valid.split(".");
-    const tampered = `${parts[0]}.${parts[1]}.${parts[2][0] === "A" ? "B" : "A"}${parts[2].slice(1)}`;
+    const encodedSignature = parts[2];
+    if (!encodedSignature) throw new Error("Missing test signature");
+    const tampered = `${parts[0]}.${parts[1]}.${encodedSignature.charAt(0) === "A" ? "B" : "A"}${encodedSignature.slice(1)}`;
     expect(await verifyCloudflareAccessJwt(tampered, options)).toBe(false);
     expect(await verifyCloudflareAccessJwt(await sign(claims({ exp: 1 })), options)).toBe(false);
     expect(
