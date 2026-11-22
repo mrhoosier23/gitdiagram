@@ -69,7 +69,10 @@ async function githubJSON(path, token, limit) {
   });
   // Do not follow redirects carrying a GitHub access token to another host.
   if (response.status >= 300 && response.status < 400)
-    fail("GitHub redirected unexpectedly; repository request was refused.", 502);
+    fail(
+      "GitHub redirected unexpectedly; repository request was refused.",
+      502,
+    );
   if (response.status === 404)
     fail("Repository not found or your GitHub token cannot access it.", 404);
   if (response.status === 403 || response.status === 429)
