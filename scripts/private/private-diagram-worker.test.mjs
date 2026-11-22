@@ -92,6 +92,7 @@ test("Generation uses the owner key only and never calls R2 or Redis",async()=>{
  const original=globalThis.fetch;
  globalThis.fetch=async(url,options={})=>{
   const u=String(url);calls.push(u);
+  assert.equal(options.redirect,"manual","Cloudflare outbound fetch must explicitly reject redirects");
   if(u==="https://api.github.com/repos/sample/project")
    return Response.json({default_branch:"main",description:"Sample project"});
   if(u.startsWith("https://api.github.com/repos/sample/project/git/trees/"))
@@ -129,4 +130,59 @@ test("Cannot generate without a key or with an unexpected hostname",async()=>{
  assert.equal(a.status,401);
  const b=await worker.fetch(new Request("https://other.example/api/keys"),env,allow);
  assert.equal(b.status,403);
+});
+
+
+test("GitHub redirects are rejected without forwarding a token or calling OpenAI",async()=>{
+  const key="sk-"+("d".repeat(26)),githubToken="github_pat_"+("e".repeat(26));
+  const input=new Request(base+"/api/diagram",{method:"POST",headers:{
+    Origin:base,"Sec-Fetch-Site":"same-origin","Content-Type":"application/json",
+    Cookie:"__Host-gd_openai="+encodeURIComponent(key)+"; __Host-gd_github="+encodeURIComponent(githubToken)
+  },body:JSON.stringify({repo:"sample/project"})});
+  const prior=globalThis.fetch;
+  let calls=0;
+  globalThis.fetch=async(url,options={})=>{
+    calls++;
+    assert.equal(String(url),"https://api.github.com/repos/sample/project");
+    assert.equal(options.redirect,"manual");
+    assert.equal(options.headers.Authorization,"Bearer "+githubToken);
+    return new Response(null,{status:302,headers:{Location:"https://untrusted.example/collect"}});
+  };
+  try{
+    const response=await worker.fetch(input,env,allow);
+    assert.equal(response.status,502);
+    assert.match((await response.json()).error,/GitHub redirected unexpectedly/);
+    assert.equal(calls,1);
+  }finally{globalThis.fetch=prior;}
+});
+test("OpenAI redirects are rejected with manual redirect mode",async()=>{
+  const key="sk-"+("f".repeat(26));
+  const input=new Request(base+"/api/diagram",{method:"POST",headers:{
+    Origin:base,"Sec-Fetch-Site":"same-origin","Content-Type":"application/json",
+    Cookie:"__Host-gd_openai="+encodeURIComponent(key)
+  },body:JSON.stringify({repo:"sample/project"})});
+  const prior=globalThis.fetch;
+  let aiCalls=0;
+  globalThis.fetch=async(url,options={})=>{
+    const u=String(url);
+    assert.equal(options.redirect,"manual");
+    if(u==="https://api.github.com/repos/sample/project")
+      return Response.json({default_branch:"main",description:"Sample project"});
+    if(u.startsWith("https://api.github.com/repos/sample/project/git/trees/"))
+      return Response.json({tree:[{type:"blob",path:"src/index.ts",size:100}]});
+    if(u.includes("/contents/"))
+      return Response.json({encoding:"base64",content:Buffer.from("export const example = true;").toString("base64")});
+    if(u==="https://api.openai.com/v1/responses"){
+      aiCalls++;
+      assert.equal(options.headers.Authorization,"Bearer "+key);
+      return new Response(null,{status:307,headers:{Location:"https://untrusted.example/collect"}});
+    }
+    throw new Error("Unexpected outbound request "+u);
+  };
+  try{
+    const response=await worker.fetch(input,env,allow);
+    assert.equal(response.status,502);
+    assert.match((await response.json()).error,/OpenAI redirected unexpectedly/);
+    assert.equal(aiCalls,1);
+  }finally{globalThis.fetch=prior;}
 });

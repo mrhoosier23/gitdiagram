@@ -64,9 +64,12 @@ function githubHeaders(token) {
 async function githubJSON(path, token, limit) {
   const response = await fetch(API + path, {
     headers: githubHeaders(token),
-    redirect: "error",
+    redirect: "manual",
     signal: AbortSignal.timeout(9000),
   });
+  // Do not follow redirects carrying a GitHub access token to another host.
+  if (response.status >= 300 && response.status < 400)
+    fail("GitHub redirected unexpectedly; repository request was refused.", 502);
   if (response.status === 404)
     fail("Repository not found or your GitHub token cannot access it.", 404);
   if (response.status === 403 || response.status === 429)
@@ -346,12 +349,16 @@ export async function analyze(input, githubToken, openaiKey) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(body),
-      redirect: "error",
+      redirect: "manual",
       signal: AbortSignal.timeout(45000),
     });
   } catch {
     fail("OpenAI could not be reached. No diagram was saved.", 502);
   }
+  // Cloudflare Workers does not implement redirect: "error".
+  // Manual mode preserves the API key by refusing every unexpected 3xx.
+  if (response.status >= 300 && response.status < 400)
+    fail("OpenAI redirected unexpectedly; generation was refused.", 502);
   if (response.status === 401)
     fail(
       "OpenAI rejected the saved API key. Open Key settings to replace it.",
