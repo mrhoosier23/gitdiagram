@@ -73,9 +73,7 @@ describe("private zero-dollar model gateway", () => {
       userPrompt: "user",
       apiKey: "sk-test-never-used",
     };
-    await expect(streamCompletion(params)).rejects.toThrow(
-      /\$0\/month budget/,
-    );
+    await expect(streamCompletion(params)).rejects.toThrow(/\$0\/month budget/);
     await expect(
       generateStructuredOutput({
         ...params,
@@ -83,9 +81,7 @@ describe("private zero-dollar model gateway", () => {
         schemaName: "test",
       }),
     ).rejects.toThrow(/\$0\/month budget/);
-    await expect(countInputTokens(params)).rejects.toThrow(
-      /\$0\/month budget/,
-    );
+    await expect(countInputTokens(params)).rejects.toThrow(/\$0\/month budget/);
     expect(openAiMocks.clientOptions).not.toHaveBeenCalled();
     expect(openAiMocks.responsesCreate).not.toHaveBeenCalled();
     expect(openAiMocks.responsesParse).not.toHaveBeenCalled();

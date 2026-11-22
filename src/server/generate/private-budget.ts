@@ -19,8 +19,7 @@ export function privateModelSpendBlocked(): boolean {
     return true;
   }
   return (
-    Number(budget) <= 0 ||
-    process.env.PRIVATE_AI_PAID_CALLS_ENABLED !== "1"
+    Number(budget) <= 0 || process.env.PRIVATE_AI_PAID_CALLS_ENABLED !== "1"
   );
 }
 

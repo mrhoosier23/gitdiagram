@@ -14,9 +14,7 @@ describe("private $0 model spending gate", () => {
     vi.stubEnv("PRIVATE_AI_PAID_CALLS_ENABLED", "1");
 
     expect(privateModelSpendBlocked()).toBe(true);
-    expect(() => assertPrivateModelSpendAllowed()).toThrow(
-      /\$0\/month budget/,
-    );
+    expect(() => assertPrivateModelSpendAllowed()).toThrow(/\$0\/month budget/);
   });
 
   it.each(["", "unknown", "-1", "0.01x"])(

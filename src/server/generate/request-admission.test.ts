@@ -76,9 +76,11 @@ describe("admitGenerationRequest", () => {
     vi.stubEnv("PRIVATE_INSTANCE_ENABLED", "1");
     vi.stubEnv("PRIVATE_MONTHLY_BUDGET_USD", "0");
     try {
-      const result = await admitGenerationRequest(request({
-        api_key: "sk-even-own-keys-blocked",
-      }));
+      const result = await admitGenerationRequest(
+        request({
+          api_key: "sk-even-own-keys-blocked",
+        }),
+      );
       expect(result.admitted).toBe(false);
       if (!result.admitted) {
         expect(result.response.status).toBe(403);
