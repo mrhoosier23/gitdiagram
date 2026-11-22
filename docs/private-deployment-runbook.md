@@ -1,6 +1,6 @@
 # Private GitDiagram: isolated Cloudflare deployment runbook
 
-**Current state (November 21, 2026, New York):** Owner-only Cloudflare Access test **deployed and browser-checked** on `gitdiagram.awolverton.com`. The real GitDiagram application is **NOT deployed or approved for deployment**.  
+**Current state (November 21, 2026, New York):** Owner-only Cloudflare Access test **deployed and browser-checked** on `gitdiagram.awolverton.com`. The owner subsequently **authorized full GitDiagram provisioning and deployment**. Three private, empty R2 buckets and two undeployed backend Worker resources were staged. **The real GitDiagram application has NOT been deployed.** A maximum monthly spending amount, dedicated Redis/OpenAI credentials and live app verification remain outstanding.  
 **Preparation branch:** `private-cloudflare-isolation-prep` in `mrhoosier23/gitdiagram` (currently public).  
 **Owner-only requirement:** Cloudflare Access must permit one exact owner identity; generated diagrams must not be accessible to other users. OpenAI may process bounded source-code excerpts.  
 **Boundary:** JARVIS resources, the original `gitdiagram.com` service, all existing account routes, existing credentials, and default-branch deployment automation are not touched.
@@ -19,6 +19,26 @@ This runbook preserves the release procedure and its safety boundary. The earlie
 ### Private R2 bucket contract
 
 The private build refuses any diagram-artifact bucket names other than `andrew-gitdiagram-private-artifacts-public` and `andrew-gitdiagram-private-artifacts-private`. The label "public" is a legacy *visibility* distinction, **not** permission to expose the bucket. Neither bucket has been created as of the test checkpoint. Before use, verify both exist exclusively for this application and have no public R2 domain or custom domain.
+
+## Owner-authorized isolated resource preparation (November 21, 2026)
+
+Following the successful test-only stage, the owner explicitly authorized provisioning the **full private GitDiagram installation** behind the existing Worker-level Access policy. A **maximum monthly spending budget was not supplied**, so code activation, metered model usage and any paid Redis upgrades remain on hold until a concrete amount and corresponding limits are set.
+
+**Created and independently read back from the connected Cloudflare account:**
+
+- `andrew-gitdiagram-private-next-cache`: new, empty R2 Standard bucket
+- `andrew-gitdiagram-private-artifacts-public`: new, empty R2 Standard bucket; “public” is only a historical visibility label, not a public endpoint
+- `andrew-gitdiagram-private-artifacts-private`: new, empty R2 Standard bucket
+- `andrew-gitdiagram-private-server`: new **undeployed**, internal-only Worker resource with `workers.dev` and preview URLs disabled
+- `andrew-gitdiagram-private-server-local`: new **undeployed**, internal-only Worker resource with `workers.dev` and preview URLs disabled
+
+For **each R2 bucket**, Cloudflare readback confirmed **zero custom domains** and **managed r2.dev public access disabled**. No objects have been uploaded, no application code has been deployed to the backend Workers, no new Worker route has been attached, and existing JARVIS and other services were left untouched. Empty buckets are not an enforceable future spending cap; do not upload data until the owner chooses a budget.
+
+**Protected front:** `andrew-gitdiagram-private` still serves the minimal harmless Access test. Its Worker-level Access application, exact-email policy, disabled public Worker/preview URLs, and the test hostname remain in place. This is not the Durable Object-exporting stub or the full application.
+
+**Still required before activation:** set an explicit monthly spending envelope; configure a project-specific OpenAI API key with a hard enforced project spend limit; provision an independent Redis service (prefer a free, isolated Upstash instance if account limits permit); create least-privilege R2 S3 credentials restricted to these new buckets; verify the DO-exporting bootstrap and internal Worker routing; and test real static files, APIs, generation, persistence, incorrect identities and spend boundaries. No tokens or keys belong in this public GitHub fork.
+
+Cloudflare's R2 Standard free allowance and Upstash's free tier are useful for a pilot, but they are *usage allowances*, not proof that this installation cannot incur charges. Consult [Cloudflare R2 pricing](https://developers.cloudflare.com/r2/pricing/), [Upstash Redis pricing](https://upstash.com/pricing/redis), and [OpenAI API enforced spend limits](https://developers.openai.com/api/docs/guides/spend-limits).
 
 ## A. Safe preparation now (no Cloudflare writes)
 
@@ -132,6 +152,7 @@ These must be run on the actual protected host after deployment is separately au
 
 - **Completed in the test-only scope:** exact-email Worker-level Access, an isolated harmless live stub, protected `gitdiagram.awolverton.com`, disabled public Worker and preview URLs, user-observed owner and incognito login behavior, and read-only Cloudflare resource verification.
 - **Completed offline:** private access/JWT source checks, private UI with tracking and public surfaces disabled, OpenAI-only provider restriction, isolated configs, R2 artifact-name runtime enforcement, credential-free private CI, OpenNext build and Wrangler dry-run procedure. CI builds against the protected hostname without touching Cloudflare.
-- **Not provisioned, deployed or validated:** the full GitDiagram application; the DO-exporting replacement for the minimal live test stub; the two internal backend Workers; the three private R2 buckets (Next cache plus two non-public diagram-artifact buckets); a dedicated Upstash Redis instance; a dedicated OpenAI API project/key; private GitHub repository authentication; a safe production deploy/rollback program; actual owner diagram generation and persistence; alternate-identity and real-static-asset tests.
-- **Decision/authority hold:** The November 21 authorization explicitly permitted the **harmless Access test only**, and separately prohibited full application deployment, paid resources and additional service/account changes. Do not interpret "keep going" or completion pressure as overriding those exclusions. Do not create or bind storage, backend Workers, model keys, or deploy the full app without a distinct owner authorization that names the actual scope and its spending boundary.
-- **Resume point:** After that authorization, verify account/resource collisions again; check the two artifact buckets and Next-cache bucket are brand-new and private; create isolated backend resources; render a clean real-host build; verify safe owner-only Access remains attached; and run full live acceptance tests **before** calling the application complete. Do not use upstream `scripts/cf-deploy.sh`.
+- **Prepared but not activated:** the two internal-only Worker resource identities and the three empty, non-public R2 buckets. No backend code or objects have been uploaded.
+- **Not deployed or validated:** the full GitDiagram application; the DO-exporting replacement for the minimal live test stub; private artifact persistence; a dedicated Upstash Redis instance; a dedicated OpenAI API project/key with enforced budget; private GitHub repository authentication; a safe production deploy/rollback program; actual owner diagram generation and persistence; alternate-identity and real-static-asset tests.
+- **Remaining spending/credential hold:** The owner subsequently authorized isolated full-application provisioning/deployment, superseding the earlier test-only restriction *for GitDiagram alone*. **No monthly maximum was supplied**, and dedicated Redis/OpenAI credentials have not been established. Do not enable chargeable model calls, paid services, or production traffic without an explicit budget and enforced applicable provider controls. Preserve the prohibition on changes to JARVIS, upstream GitDiagram, and unrelated services.
+- **Resume point:** First establish the owner’s monthly spending maximum, then configure independent Upstash and OpenAI project access and hard spend settings. Re-verify exact Worker IDs, isolated bucket privacy and Access; install the DO-exporting harmless bootstrap, validate owner/incognito behavior again, deploy backend code and scoped credentials, then promote the front application with final browser, API, persistence and privacy QA. Do not use upstream `scripts/cf-deploy.sh`.
