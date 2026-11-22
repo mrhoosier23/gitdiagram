@@ -12,7 +12,7 @@ export const PRIVATE_MODEL_SPEND_BLOCKED =
 
 export const PRIVATE_MODEL_SPEND_ERROR_CODE = "PRIVATE_MODEL_SPEND_BLOCKED";
 
-export const PRIVATE_STORAGE_SPEND_BLOCKED =
+const PRIVATE_STORAGE_SPEND_BLOCKED =
   "Remote storage is disabled for this private GitDiagram's $0/month budget.";
 
 function hasPositivePrivateBudget(): boolean {
