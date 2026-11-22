@@ -13,7 +13,9 @@ describe("private GitDiagram model-provider restriction", () => {
     vi.stubEnv("AI_PROVIDER", "openrouter");
     expect(() => getProvider()).toThrow("only permits the OpenAI provider");
     vi.stubEnv("AI_PROVIDER", "meta");
-    expect(() => getGenerationProvider({})).toThrow("only permits the OpenAI provider");
+    expect(() => getGenerationProvider({})).toThrow(
+      "only permits the OpenAI provider",
+    );
   });
 
   it("preserves public provider selection", () => {

@@ -180,7 +180,10 @@ export function RepositoryReadout({
           Read as Markdown
         </a>{" "}
         {!PRIVATE_BUILD && (
-          <> · <ReadmeBadgeLink owner={owner} repo={repo} /></>
+          <>
+            {" "}
+            · <ReadmeBadgeLink owner={owner} repo={repo} />
+          </>
         )}
       </p>
     </section>

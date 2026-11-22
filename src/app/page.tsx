@@ -24,12 +24,12 @@ export const metadata: Metadata = PRIVATE_BUILD
       robots: { index: false, follow: false, noarchive: true },
     }
   : {
-  title: "GitDiagram - Visualize Any GitHub Repository",
-  description: HOME_DESCRIPTION,
-  alternates: {
-    canonical: "/",
-  },
-};
+      title: "GitDiagram - Visualize Any GitHub Repository",
+      description: HOME_DESCRIPTION,
+      alternates: {
+        canonical: "/",
+      },
+    };
 
 /** schema.org: the site as a free web application, and how to use it. */
 const applicationJsonLd = {
