@@ -1,3 +1,4 @@
+import { PRIVATE_BUILD } from "~/lib/private-build";
 import type { Metadata } from "next";
 import { permanentRedirect } from "next/navigation";
 import { isPlaceholderRepo } from "~/lib/placeholder-repo";
@@ -36,6 +37,11 @@ export async function generateMetadata({
 }: RepoPageProps): Promise<Metadata> {
   const { username, repo } = await params;
   if (isPlaceholderRepo(username, repo)) return placeholderRepoMetadata;
+  if (PRIVATE_BUILD)
+    return {
+      title: `${username}/${repo} | Private GitDiagram`,
+      robots: { index: false, follow: false, noarchive: true },
+    };
   const repositoryPath = getRepoPagePath(username, repo);
   // The same cached read the page makes (deduplicated per request).
   const { state, failed } = await readPublicDiagramState(username, repo);
@@ -90,18 +96,23 @@ export default async function Repo({ params }: RepoPageProps) {
   // diagram itself, as it does for a new repo.
   const { state } = await readPublicDiagramState(username, repo);
   const readout = state ? diagramReadout(state, username, repo) : null;
-  const related = readout ? await readRelatedDiagrams(username, repo) : null;
+  const related =
+    readout && !PRIVATE_BUILD
+      ? await readRelatedDiagrams(username, repo)
+      : null;
 
   return (
     <>
-      <JsonLd
-        data={repositoryJsonLd({
-          owner: username,
-          repo,
-          description: repositoryPageDescription(username, repo, readout),
-          readout,
-        })}
-      />
+      {!PRIVATE_BUILD && (
+        <JsonLd
+          data={repositoryJsonLd({
+            owner: username,
+            repo,
+            description: repositoryPageDescription(username, repo, readout),
+            readout,
+          })}
+        />
+      )}
       <RepoPageClient
         key={`${username.toLowerCase()}/${repo.toLowerCase()}`}
         username={username}

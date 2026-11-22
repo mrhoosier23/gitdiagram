@@ -1,3 +1,4 @@
+import { PRIVATE_BUILD } from "~/lib/private-build";
 import type { Metadata } from "next";
 import Link from "next/link";
 import MainCard from "~/components/main-card";
@@ -16,7 +17,13 @@ const HOME_DESCRIPTION = VIDEOS_ENABLED
   ? "Turn any GitHub repository into an interactive architecture diagram or a one-minute explainer video for quick codebase understanding."
   : "Turn any GitHub repository into an interactive architecture diagram for quick codebase understanding.";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = PRIVATE_BUILD
+  ? {
+      title: "GitDiagram | Private Workspace",
+      description: "Generate diagrams for repositories you choose.",
+      robots: { index: false, follow: false, noarchive: true },
+    }
+  : {
   title: "GitDiagram - Visualize Any GitHub Repository",
   description: HOME_DESCRIPTION,
   alternates: {
@@ -68,7 +75,7 @@ export default function HomePage() {
     // Clipped sideways at the screen's edge: the banner's glow reaches past it
     // on narrow phones and would otherwise let the page scroll sideways.
     <main className="flex min-h-[calc(100svh-9.75rem)] flex-col justify-center overflow-x-clip px-4 pt-6 pb-3 sm:block sm:min-h-0 sm:px-8 sm:py-8 md:p-8">
-      <JsonLd data={applicationJsonLd} />
+      {!PRIVATE_BUILD && <JsonLd data={applicationJsonLd} />}
       {/* The banner borrows its room from the surrounding gaps so the page
           still fits one screen. */}
       <div
@@ -108,14 +115,18 @@ export default function HomePage() {
           )}
         >
           <p>
-            {VIDEOS_ENABLED
-              ? "Turn any GitHub repository into an interactive diagram or explainer video."
-              : "Turn any GitHub repository into an interactive diagram for visualization."}
+            {PRIVATE_BUILD
+              ? "Analyze repositories in your private architecture workspace."
+              : VIDEOS_ENABLED
+                ? "Turn any GitHub repository into an interactive diagram or explainer video."
+                : "Turn any GitHub repository into an interactive diagram for visualization."}
           </p>
-          <p className="hidden sm:block">
-            Or, replace &apos;hub&apos; with &apos;diagram&apos; in any GitHub
-            URL.
-          </p>
+          {!PRIVATE_BUILD && (
+            <p className="hidden sm:block">
+              Or, replace &apos;hub&apos; with &apos;diagram&apos; in any GitHub
+              URL.
+            </p>
+          )}
         </div>
       </div>
       <div className="flex justify-center sm:mb-16 lg:mb-0">

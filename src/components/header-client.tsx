@@ -1,5 +1,6 @@
 "use client";
 
+import { PRIVATE_BUILD } from "~/lib/private-build";
 import { Suspense, use, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -75,7 +76,8 @@ export function HeaderClient({ starCount }: HeaderClientProps) {
   // never rewrites URLs), so these can render at SSR without mismatch risk.
   const isBrowsePage = pathname === "/browse";
   const showMobileGithubButton =
-    pathname === "/" || isBrowsePage || pathname === "/videos";
+    !PRIVATE_BUILD &&
+    (pathname === "/" || isBrowsePage || pathname === "/videos");
 
   return (
     <header className="border-black sm:border-b-[3px] dark:border-black">
@@ -106,7 +108,7 @@ export function HeaderClient({ starCount }: HeaderClientProps) {
                 </Suspense>
               </span>
             </Link>
-          ) : !isBrowsePage ? (
+          ) : !PRIVATE_BUILD && !isBrowsePage ? (
             <Link
               href="/browse"
               prefetch={false}
@@ -141,12 +143,14 @@ export function HeaderClient({ starCount }: HeaderClientProps) {
               <NewBadge />
             </Link>
           )}
-          <Link
-            href="/browse"
-            className="text-sm font-medium text-black transition-colors duration-150 hover:text-purple-600 dark:text-neutral-200 dark:hover:text-[hsl(var(--neo-link-hover))]"
-          >
-            Browse
-          </Link>
+          {!PRIVATE_BUILD && (
+            <Link
+              href="/browse"
+              className="text-sm font-medium text-black transition-colors duration-150 hover:text-purple-600 dark:text-neutral-200 dark:hover:text-[hsl(var(--neo-link-hover))]"
+            >
+              Browse
+            </Link>
+          )}
           <button
             type="button"
             onFocus={() => void loadApiKeyDialog()}
@@ -166,16 +170,18 @@ export function HeaderClient({ starCount }: HeaderClientProps) {
             Private Repos
           </button>
           <ThemeToggle />
-          <Link
-            href={GITHUB_REPO_URL}
-            className="flex items-center gap-1 text-sm font-medium text-black transition-colors duration-150 hover:text-purple-600 sm:gap-2 dark:text-neutral-200 dark:hover:text-[hsl(var(--neo-link-hover))]"
-          >
-            <GitHubIcon className="h-5 w-5" />
-            <span className="hidden sm:inline">GitHub</span>
-            <Suspense fallback={null}>
-              <DesktopStarCount starCount={starCount} />
-            </Suspense>
-          </Link>
+          {!PRIVATE_BUILD && (
+            <Link
+              href={GITHUB_REPO_URL}
+              className="flex items-center gap-1 text-sm font-medium text-black transition-colors duration-150 hover:text-purple-600 sm:gap-2 dark:text-neutral-200 dark:hover:text-[hsl(var(--neo-link-hover))]"
+            >
+              <GitHubIcon className="h-5 w-5" />
+              <span className="hidden sm:inline">GitHub</span>
+              <Suspense fallback={null}>
+                <DesktopStarCount starCount={starCount} />
+              </Suspense>
+            </Link>
+          )}
         </nav>
 
         <div
@@ -207,7 +213,7 @@ export function HeaderClient({ starCount }: HeaderClientProps) {
                     <NewBadge />
                   </Link>
                 )}
-                {!isBrowsePage ? (
+                {!PRIVATE_BUILD && !isBrowsePage ? (
                   <Link
                     href="/browse"
                     prefetch={false}
@@ -245,19 +251,21 @@ export function HeaderClient({ starCount }: HeaderClientProps) {
                   onToggle={() => setIsMobileMenuOpen(false)}
                   className="browse-muted-button inline-flex min-h-[48px] items-center justify-between rounded-md px-4 py-3 text-sm font-semibold"
                 />
-                <Link
-                  href={GITHUB_REPO_URL}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="browse-muted-button inline-flex min-h-[48px] items-center justify-between gap-3 rounded-md px-4 py-3 text-sm font-semibold"
-                >
-                  <span className="flex items-center gap-2">
-                    <GitHubIcon className="h-5 w-5" />
-                    GitHub Repo
-                  </span>
-                  <Suspense fallback={null}>
-                    <MobileMenuStarCount starCount={starCount} />
-                  </Suspense>
-                </Link>
+                {!PRIVATE_BUILD && (
+                  <Link
+                    href={GITHUB_REPO_URL}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="browse-muted-button inline-flex min-h-[48px] items-center justify-between gap-3 rounded-md px-4 py-3 text-sm font-semibold"
+                  >
+                    <span className="flex items-center gap-2">
+                      <GitHubIcon className="h-5 w-5" />
+                      GitHub Repo
+                    </span>
+                    <Suspense fallback={null}>
+                      <MobileMenuStarCount starCount={starCount} />
+                    </Suspense>
+                  </Link>
+                )}
               </nav>
             </div>
           </div>

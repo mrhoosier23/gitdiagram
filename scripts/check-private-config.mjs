@@ -60,6 +60,12 @@ if (!stubConfig.includes('"workers_dev": false') ||
   console.error("Private Access stub must be fail-closed and protect static assets");
 }
 
+const offlineBuild = readFileSync("scripts/private/offline-verify.sh", "utf8");
+const privateBuild = readFileSync("src/lib/private-build.ts", "utf8");
+const providers = readFileSync("src/app/providers.tsx", "utf8");
+const layout = readFileSync("src/app/layout.tsx", "utf8");
+const modelProvider = readFileSync("src/server/generate/model-config.ts", "utf8");
+
 const routing = readFileSync("cloudflare/worker.ts", "utf8");
 const gate = readFileSync("src/lib/private-instance.ts", "utf8");
 const signedJwt = readFileSync("src/lib/access-jwt.ts", "utf8");
@@ -67,6 +73,11 @@ const index = readFileSync("src/server/storage/diagram-state.ts", "utf8");
 const indexNow = readFileSync("src/server/visibility/indexnow.ts", "utf8");
 
 for (const [name, condition] of [
+  ["private compiled UI flag", offlineBuild.includes("NEXT_PUBLIC_PRIVATE_INSTANCE=1")],
+  ["private UI flag read", privateBuild.includes("NEXT_PUBLIC_PRIVATE_INSTANCE")],
+  ["private mode skips analytics", providers.includes("!PRIVATE_BUILD && <AnalyticsAfterCredentialMigration")],
+  ["private mode skips sponsor polling", layout.includes("PRIVATE_BUILD ? (")],
+  ["private mode only uses OpenAI", modelProvider.includes("Private GitDiagram only permits the OpenAI provider")],
   ["routing Worker owner gate", routing.includes("rejectUnauthorizedPrivateRequest")],
   ["Cloudflare Access identity check", gate.includes("ctx.access")],
   ["signed JWT verification", gate.includes("verifyCloudflareAccessJwt")],
