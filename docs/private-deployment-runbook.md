@@ -1,6 +1,6 @@
 # Private GitDiagram: isolated Cloudflare deployment runbook
 
-**Current state (November 22, 2026, New York):** Owner-only Cloudflare Access test **deployed and browser-checked** on `gitdiagram.awolverton.com`. The owner authorized full GitDiagram provisioning but then specified a **strict $0/month spending ceiling**. Three private, empty R2 buckets and two undeployed backend Worker resources were staged. **The real AI-powered GitDiagram application has NOT been deployed.** Paid OpenAI API inference cannot meet the $0 requirement without available promotional credits or a different explicit source of funded API usage, and Cloudflare R2 free usage allowances are not hard spend caps.  
+**Current state (November 22, 2026, New York):** Owner-only Cloudflare Access test **deployed and browser-checked** on `gitdiagram.awolverton.com`. The owner authorized full GitDiagram preparation and confirmed **existing prepaid OpenAI API credits**, with **$0 in new spending**. Three private, empty R2 buckets and two undeployed backend Worker resources were staged. **The real AI-powered GitDiagram application has NOT been deployed.** Credit-funded OpenAI generation is allowed in the isolated code only with the owner's UI-provided key. Non-AI storage remains blocked until a $0-safe operating plan is proven.  
 **Preparation branch:** `private-cloudflare-isolation-prep` in `mrhoosier23/gitdiagram` (currently public).  
 **Owner-only requirement:** Cloudflare Access must permit one exact owner identity; generated diagrams must not be accessible to other users. OpenAI may process bounded source-code excerpts.  
 **Boundary:** JARVIS resources, the original `gitdiagram.com` service, all existing account routes, existing credentials, and default-branch deployment automation are not touched.
@@ -39,6 +39,36 @@ For **each R2 bucket**, Cloudflare readback confirmed **zero custom domains** an
 **Still required before activation:** set an explicit monthly spending envelope; configure a project-specific OpenAI API key with a hard enforced project spend limit; provision an independent Redis service (prefer a free, isolated Upstash instance if account limits permit); create least-privilege R2 S3 credentials restricted to these new buckets; verify the DO-exporting bootstrap and internal Worker routing; and test real static files, APIs, generation, persistence, incorrect identities and spend boundaries. No tokens or keys belong in this public GitHub fork.
 
 Cloudflare's R2 Standard free allowance and Upstash's free tier are useful for a pilot, but they are *usage allowances*, not proof that this installation cannot incur charges. Consult [Cloudflare R2 pricing](https://developers.cloudflare.com/r2/pricing/), [Upstash Redis pricing](https://upstash.com/pricing/redis), and [OpenAI API enforced spend limits](https://developers.openai.com/api/docs/guides/spend-limits).
+
+## Prepaid OpenAI API credits clarification (November 22, 2026)
+
+The owner explicitly confirmed that **OpenAI API credits already exist** and that
+**$0/month means $0 in NEW spending**, not that all model inference must stop.
+Do not ask the owner to demonstrate the balance or paste an API key in chat.
+The existing GitDiagram UI already supports a secure OpenAI API key dialog and
+an HTTP-only cookie scoped to API requests.
+
+The new `PRIVATE_OPENAI_CREDITS_ENABLED=1` switch, combined with
+`PRIVATE_INSTANCE_ENABLED=1`, `PRIVATE_MONTHLY_BUDGET_USD=0` and
+`PRIVATE_AI_PAID_CALLS_ENABLED=0`, allows OpenAI calls using **only the key
+entered by the owner through that dialog**. In this mode, the server refuses
+to fall back to a server-managed `OPENAI_API_KEY`, so a missing owner key is
+a clear error rather than a hidden alternate billing route.
+
+**Limit:** the application cannot verify remaining OpenAI credits or the
+provider's automatic recharge status. A confirmed credit balance is not itself
+an enforceable hard $0 future-spend cap. Do not buy credits, enable auto-recharge,
+create paid infrastructure or imply that a credit-based call cannot cause
+subsequent billing. Keep live application promotion held until the remaining
+non-AI infrastructure and privacy acceptance checks are supported.
+
+**Unchanged:** R2 and Redis remote operations remain blocked under the
+`PRIVATE_METERED_STORAGE_ENABLED=0` gate, because their free allowances are
+not hard $0 spending caps. The live site still serves the harmless Access stub,
+and no OpenAI key or private repository contents have been installed or
+uploaded here.
+
+### Earlier strict-zero interpretation, superseded for OpenAI prepaid credits
 
 ## Strict $0/month decision (November 22, 2026)
 

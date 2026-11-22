@@ -96,6 +96,24 @@ describe("admitGenerationRequest", () => {
     }
   });
 
+  it("accepts a caller-supplied key after the owner enables credit mode", async () => {
+    vi.stubEnv("PRIVATE_INSTANCE_ENABLED", "1");
+    vi.stubEnv("PRIVATE_MONTHLY_BUDGET_USD", "0");
+    vi.stubEnv("PRIVATE_OPENAI_CREDITS_ENABLED", "1");
+    vi.stubEnv("PRIVATE_AI_PAID_CALLS_ENABLED", "0");
+    try {
+      const result = await admitGenerationRequest(
+        request({ api_key: "owner-credit-funded-key" }),
+      );
+      expect(result.admitted).toBe(true);
+      if (result.admitted) {
+        expect(result.value.apiKey).toBe("owner-credit-funded-key");
+      }
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   it("charges an operator back-fill run to no address bucket", async () => {
     vi.stubEnv("CRON_SECRET", "operator-secret");
     try {

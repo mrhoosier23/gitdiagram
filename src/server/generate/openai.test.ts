@@ -88,6 +88,46 @@ describe("private zero-dollar model gateway", () => {
   });
 });
 
+describe("OpenAI prepaid credit mode", () => {
+  it("uses the owner's supplied key rather than a server fallback", async () => {
+    vi.stubEnv("PRIVATE_INSTANCE_ENABLED", "1");
+    vi.stubEnv("PRIVATE_MONTHLY_BUDGET_USD", "0");
+    vi.stubEnv("PRIVATE_OPENAI_CREDITS_ENABLED", "1");
+    vi.stubEnv("PRIVATE_AI_PAID_CALLS_ENABLED", "0");
+    vi.stubEnv("OPENAI_API_KEY", "server-key-must-not-be-used");
+    openAiMocks.responsesCreate.mockResolvedValue(completedEvents());
+
+    const result = await streamCompletion({
+      provider: "openai",
+      model: "gpt-6-luna",
+      systemPrompt: "system",
+      userPrompt: "user",
+      apiKey: "owner-credit-funded-key",
+    });
+    expect(await consume(result.stream)).toEqual(["done"]);
+    expect(openAiMocks.clientOptions).toHaveBeenCalledWith(
+      expect.objectContaining({ apiKey: "owner-credit-funded-key" }),
+    );
+  });
+
+  it("refuses the server key when the owner has not entered their own", async () => {
+    vi.stubEnv("PRIVATE_INSTANCE_ENABLED", "1");
+    vi.stubEnv("PRIVATE_MONTHLY_BUDGET_USD", "0");
+    vi.stubEnv("PRIVATE_OPENAI_CREDITS_ENABLED", "1");
+    vi.stubEnv("OPENAI_API_KEY", "server-key-must-not-be-used");
+
+    await expect(
+      streamCompletion({
+        provider: "openai",
+        model: "gpt-6-luna",
+        systemPrompt: "system",
+        userPrompt: "user",
+      }),
+    ).rejects.toThrow(/Enter your OpenAI API key in GitDiagram/);
+    expect(openAiMocks.clientOptions).not.toHaveBeenCalled();
+  });
+});
+
 describe("OpenAI Responses text verbosity", () => {
   it.each(["gpt-5.6-luna", "gpt-6-luna"])(
     "requests Fast for managed %s and retains the tier actually served",

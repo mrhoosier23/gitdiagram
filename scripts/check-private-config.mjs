@@ -22,6 +22,7 @@ for (const [file, name] of Object.entries(configFiles)) {
     '"PRIVATE_INSTANCE_ENABLED": "1"',
     '"PRIVATE_MONTHLY_BUDGET_USD": "0"',
     '"PRIVATE_AI_PAID_CALLS_ENABLED": "0"',
+    '"PRIVATE_OPENAI_CREDITS_ENABLED": "1"',
     '"PRIVATE_METERED_STORAGE_ENABLED": "0"',
     '"INDEXNOW_ENABLED": "0"',
     '"bucket_name": "andrew-gitdiagram-private-next-cache"',
@@ -56,6 +57,7 @@ const stubCode = readFileSync("cloudflare/private-access-stub.ts", "utf8");
 if (!stubConfig.includes('"workers_dev": false') ||
     !stubConfig.includes('"PRIVATE_MONTHLY_BUDGET_USD": "0"') ||
     !stubConfig.includes('"PRIVATE_AI_PAID_CALLS_ENABLED": "0"') ||
+    !stubConfig.includes('"PRIVATE_OPENAI_CREDITS_ENABLED": "1"') ||
     !stubConfig.includes('"PRIVATE_METERED_STORAGE_ENABLED": "0"') ||
     !stubConfig.includes('"preview_urls": false') ||
     !stubConfig.includes('"run_worker_first": true') ||

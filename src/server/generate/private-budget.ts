@@ -1,11 +1,10 @@
 /**
  * A strict spending gate for private GitDiagram.
  *
- * A configured $0 budget blocks every billable model request, including
- * requests using a visitor-provided API key. A missing or invalid budget
- * also fails closed. A future positive budget alone cannot enable paid calls:
- * that requires a separate explicit operator switch after provider-side
- * spending limits and authorization have been verified.
+ * The owner has prepaid OpenAI API credits and wants $0 of NEW spending.
+ * The credit-funded mode accepts a visitor-provided OpenAI key only, never
+ * silently borrowing a server key. Missing or invalid settings fail closed.
+ * This code cannot verify whether the owner's API account auto-recharges.
  */
 export const PRIVATE_MODEL_SPEND_BLOCKED =
   "AI generation is disabled for this private GitDiagram's $0/month budget.";
@@ -24,8 +23,24 @@ function hasPositivePrivateBudget(): boolean {
   );
 }
 
+/**
+ * The owner confirmed existing OpenAI API credits. $0 is therefore the
+ * out-of-pocket ceiling, not a request to disable their prepaid credits.
+ * This mode authorizes only an API key supplied in GitDiagram's own credential
+ * dialog. It does NOT inspect credits or guarantee the provider's billing
+ * settings prevent automatic purchases.
+ */
+export function privateOpenAICreditsMode(): boolean {
+  return (
+    process.env.PRIVATE_INSTANCE_ENABLED === "1" &&
+    process.env.PRIVATE_MONTHLY_BUDGET_USD?.trim() === "0" &&
+    process.env.PRIVATE_OPENAI_CREDITS_ENABLED === "1"
+  );
+}
+
 export function privateModelSpendBlocked(): boolean {
   if (process.env.PRIVATE_INSTANCE_ENABLED !== "1") return false;
+  if (privateOpenAICreditsMode()) return false;
   return (
     !hasPositivePrivateBudget() ||
     process.env.PRIVATE_AI_PAID_CALLS_ENABLED !== "1"

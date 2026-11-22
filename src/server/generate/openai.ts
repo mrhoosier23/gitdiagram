@@ -1,6 +1,9 @@
 import OpenAI from "openai";
 
-import { assertPrivateModelSpendAllowed } from "./private-budget";
+import {
+  assertPrivateModelSpendAllowed,
+  privateOpenAICreditsMode,
+} from "./private-budget";
 import { zodTextFormat } from "openai/helpers/zod";
 import type { ZodType } from "zod";
 
@@ -108,6 +111,17 @@ function buildRequestOptions(params: {
 }
 
 function resolveApiKey(provider: AIProvider, overrideApiKey?: string): string {
+  // Prepaid-credit mode must never fall back to a shared server key.
+  // The owner enters the key in GitDiagram's existing API-key dialog.
+  if (provider === "openai" && privateOpenAICreditsMode()) {
+    const supplied = overrideApiKey?.trim();
+    if (!supplied) {
+      throw new Error(
+        "Enter your OpenAI API key in GitDiagram's OpenAI API key dialog.",
+      );
+    }
+    return supplied;
+  }
   const apiKey = overrideApiKey?.trim() || getEnvApiKey(provider);
   if (!apiKey) {
     throw new Error(

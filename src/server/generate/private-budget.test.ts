@@ -5,6 +5,7 @@ import {
   assertPrivateModelSpendAllowed,
   privateMeteredStorageBlocked,
   privateModelSpendBlocked,
+  privateOpenAICreditsMode,
 } from "./private-budget";
 
 afterEach(() => vi.unstubAllEnvs());
@@ -21,6 +22,26 @@ describe("private $0 model spending gate", () => {
     expect(() => assertPrivateMeteredStorageAllowed()).toThrow(
       /\$0\/month budget/,
     );
+  });
+
+  it("permits prepaid OpenAI credits with a $0 new-spending limit", () => {
+    vi.stubEnv("PRIVATE_INSTANCE_ENABLED", "1");
+    vi.stubEnv("PRIVATE_MONTHLY_BUDGET_USD", "0");
+    vi.stubEnv("PRIVATE_OPENAI_CREDITS_ENABLED", "1");
+    vi.stubEnv("PRIVATE_AI_PAID_CALLS_ENABLED", "0");
+
+    expect(privateOpenAICreditsMode()).toBe(true);
+    expect(privateModelSpendBlocked()).toBe(false);
+    expect(() => assertPrivateModelSpendAllowed()).not.toThrow();
+    expect(privateMeteredStorageBlocked()).toBe(true);
+  });
+
+  it("refuses credit mode without an exact $0 budget and explicit flag", () => {
+    vi.stubEnv("PRIVATE_INSTANCE_ENABLED", "1");
+    vi.stubEnv("PRIVATE_OPENAI_CREDITS_ENABLED", "1");
+    vi.stubEnv("PRIVATE_MONTHLY_BUDGET_USD", "5");
+    expect(privateOpenAICreditsMode()).toBe(false);
+    expect(privateModelSpendBlocked()).toBe(true);
   });
 
   it.each(["", "unknown", "-1", "0.01x"])(
