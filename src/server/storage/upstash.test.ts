@@ -32,10 +32,10 @@ describe("Upstash readiness", () => {
     vi.stubEnv("PRIVATE_METERED_STORAGE_ENABLED", "1");
 
     await expect(checkUpstashConnection()).rejects.toThrow(
-      /\\$0\\/month budget/,
+      /\$0\/month budget/,
     );
     await expect(upstashPipeline([["PING"]])).rejects.toThrow(
-      /\\$0\\/month budget/,
+      /\$0\/month budget/,
     );
     expect(fetchMock).not.toHaveBeenCalled();
   });

@@ -19,7 +19,7 @@ function hasPositivePrivateBudget(): boolean {
   const budget = process.env.PRIVATE_MONTHLY_BUDGET_USD?.trim();
   return Boolean(
     budget &&
-      /^(?:0|[1-9]\\d*)(?:\\.\\d{1,2})?$/.test(budget) &&
+      /^(?:0|[1-9]\d*)(?:\.\d{1,2})?$/.test(budget) &&
       Number(budget) > 0,
   );
 }

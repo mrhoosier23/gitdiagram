@@ -55,11 +55,11 @@ describe("zero-dollar private R2 guard", () => {
     process.env.PRIVATE_METERED_STORAGE_ENABLED = "1";
 
     await expect(getJsonObject("bucket", "key")).rejects.toThrow(
-      /\\$0\\/month budget/,
+      /\$0\/month budget/,
     );
     await expect(
       putBinaryObject("bucket", "key", Buffer.from("abc"), "text/plain"),
-    ).rejects.toThrow(/\\$0\\/month budget/);
+    ).rejects.toThrow(/\$0\/month budget/);
     expect(sdk.send).not.toHaveBeenCalled();
   });
 });
