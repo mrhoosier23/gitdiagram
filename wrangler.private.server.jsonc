@@ -31,6 +31,7 @@
     "PRIVATE_INSTANCE_ENABLED": "1",
     "PRIVATE_MONTHLY_BUDGET_USD": "0",
     "PRIVATE_AI_PAID_CALLS_ENABLED": "0",
+    "PRIVATE_METERED_STORAGE_ENABLED": "0",
     "INDEXNOW_ENABLED": "0",
     "SITE_ORIGIN": "https://set-private-origin.invalid",
   },

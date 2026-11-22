@@ -3,6 +3,7 @@ import { promisify } from "node:util";
 import { gunzip, gzip } from "node:zlib";
 
 import { cloudflareContext } from "~/server/cloudflare-context";
+import { assertPrivateMeteredStorageAllowed } from "~/server/generate/private-budget";
 
 import { assertLiveStorageAllowedForTests, readRequiredEnv } from "./config";
 
@@ -78,6 +79,7 @@ async function requestHandler() {
 }
 
 async function getClient() {
+  assertPrivateMeteredStorageAllowed();
   assertLiveStorageAllowedForTests("R2");
 
   s3ModulePromise ??= import("@aws-sdk/client-s3");

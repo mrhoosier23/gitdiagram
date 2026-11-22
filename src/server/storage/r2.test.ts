@@ -48,6 +48,22 @@ afterAll(() => {
   process.env = { ...originalEnv };
 });
 
+describe("zero-dollar private R2 guard", () => {
+  it("blocks reads and writes before sending an S3 request", async () => {
+    process.env.PRIVATE_INSTANCE_ENABLED = "1";
+    process.env.PRIVATE_MONTHLY_BUDGET_USD = "0";
+    process.env.PRIVATE_METERED_STORAGE_ENABLED = "1";
+
+    await expect(getJsonObject("bucket", "key")).rejects.toThrow(
+      /\\$0\\/month budget/,
+    );
+    await expect(
+      putBinaryObject("bucket", "key", Buffer.from("abc"), "text/plain"),
+    ).rejects.toThrow(/\\$0\\/month budget/);
+    expect(sdk.send).not.toHaveBeenCalled();
+  });
+});
+
 describe("R2 timeouts", () => {
   it("gives every attempt its own timeout, and makes it an error", async () => {
     sdk.send.mockResolvedValue({

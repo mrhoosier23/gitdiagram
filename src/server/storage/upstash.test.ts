@@ -6,7 +6,10 @@ vi.mock("~/server/storage/config", async (importOriginal) => ({
   assertLiveStorageAllowedForTests: vi.fn(),
 }));
 
-import { checkUpstashConnection } from "~/server/storage/upstash";
+import {
+  checkUpstashConnection,
+  upstashPipeline,
+} from "~/server/storage/upstash";
 
 const fetchMock = vi.fn<typeof fetch>();
 
@@ -21,6 +24,20 @@ describe("Upstash readiness", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.unstubAllEnvs();
+  });
+
+  it("blocks Redis commands and pipelines under a private zero-dollar budget", async () => {
+    vi.stubEnv("PRIVATE_INSTANCE_ENABLED", "1");
+    vi.stubEnv("PRIVATE_MONTHLY_BUDGET_USD", "0");
+    vi.stubEnv("PRIVATE_METERED_STORAGE_ENABLED", "1");
+
+    await expect(checkUpstashConnection()).rejects.toThrow(
+      /\\$0\\/month budget/,
+    );
+    await expect(upstashPipeline([["PING"]])).rejects.toThrow(
+      /\\$0\\/month budget/,
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it.each([0, 1])(

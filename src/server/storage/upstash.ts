@@ -1,3 +1,5 @@
+import { assertPrivateMeteredStorageAllowed } from "~/server/generate/private-budget";
+
 import {
   assertLiveStorageAllowedForTests,
   readRequiredEnv,
@@ -17,6 +19,7 @@ function getHeaders(): HeadersInit {
 }
 
 async function execute<T>(path: string, body: unknown): Promise<T> {
+  assertPrivateMeteredStorageAllowed();
   assertLiveStorageAllowedForTests("Upstash");
 
   const timeoutSignal = AbortSignal.timeout(UPSTASH_REQUEST_TIMEOUT_MS);
@@ -60,6 +63,7 @@ export async function upstashCommand<T>(command: unknown[]): Promise<T> {
 export async function upstashPipeline(
   commands: unknown[][],
 ): Promise<Array<{ result?: unknown; error?: string }>> {
+  assertPrivateMeteredStorageAllowed();
   assertLiveStorageAllowedForTests("Upstash");
   const response = await fetch(`${getBaseUrl()}/pipeline`, {
     method: "POST",
