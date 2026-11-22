@@ -56,6 +56,8 @@ jobs:
             done < <(git diff --name-only -z --)
             exit 1
           fi
+      - name: Verify standalone private architecture Worker (no network, no secrets)
+        run: node --test scripts/private/private-diagram-worker.test.mjs
       - name: Local tests, private OpenNext build and Wrangler dry-runs ONLY
         run: bash scripts/private/offline-verify.sh
         env:
