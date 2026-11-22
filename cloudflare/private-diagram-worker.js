@@ -220,7 +220,7 @@ async function handle(request, env, ctx) {
   }
   return error("Not found.", 404);
 }
-export default {
+const privateAppWorker = {
   async fetch(request, env, ctx) {
     try {
       return await handle(request, env, ctx);
@@ -234,4 +234,6 @@ export default {
     }
   },
 };
+export default privateAppWorker;
+
 export const PRIVATE_API_TEST = { authenticated, cookie, verifiedInput };

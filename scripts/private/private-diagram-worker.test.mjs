@@ -3,7 +3,6 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import worker from "../../cloudflare/private-diagram-worker.js";
 import { TEST as analysis } from "../../cloudflare/private-diagram-analysis.js";
-import { PRIVATE_HTML } from "../../cloudflare/private-diagram-ui.js";
 const base="https://gitdiagram.awolverton.com";
 const env={
  PRIVATE_INSTANCE_ENABLED:"1",
