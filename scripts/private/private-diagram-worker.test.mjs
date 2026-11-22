@@ -42,7 +42,7 @@ test("Owner sees private HTML without external scripts or leaked keys",async()=>
 test("The old protected access-check remains available",async()=>{
  const response=await worker.fetch(req("/__access-check"),env,allow);
  assert.equal(response.status,200);
- assert.deepEqual(await response.json(),{private:true,authenticated:true,mode:"access-stub"});
+ assert.deepEqual(await response.json(),{private:true,authenticated:true,mode:"private-app"});
 });
 test("Owner key entry writes HttpOnly cookies, never exposes the value",async()=>{
  const key="sk-"+("a".repeat(24));

@@ -151,7 +151,7 @@ async function handle(request, env, ctx) {
   if (request.method === "GET") {
     if (path === "/") return home();
     if (path === "/__access-check")
-      return json({ private: true, authenticated: true, mode: "access-stub" });
+      return json({ private: true, authenticated: true, mode: "private-app" });
     if (path === "/access-proof.txt")
       return new Response(
         "Harmless Cloudflare Access test fixture. No GitDiagram data.\n",
