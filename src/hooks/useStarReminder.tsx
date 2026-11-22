@@ -1,11 +1,13 @@
 "use client";
 
+import { PRIVATE_BUILD } from "~/lib/private-build";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { GITHUB_REPO_URL } from "~/lib/site";
 
 export function useStarReminder() {
   useEffect(() => {
+    if (PRIVATE_BUILD) return;
     const hasShownStarReminder = localStorage.getItem("hasShownStarReminder");
 
     if (!hasShownStarReminder) {

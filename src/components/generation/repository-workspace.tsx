@@ -1,5 +1,6 @@
 "use client";
 
+import { PRIVATE_BUILD } from "~/lib/private-build";
 import {
   useCallback,
   useEffect,
@@ -271,7 +272,9 @@ export function RepositoryWorkspace({
           <GenerationAuditPanel audit={state.latestSessionAudit} />
         </details>
       )}
-      {ready && <SponsorSlot surface="diagram" className="mt-10 mb-6" />}
+      {ready && !PRIVATE_BUILD && (
+        <SponsorSlot surface="diagram" className="mt-10 mb-6" />
+      )}
     </section>
   );
 }

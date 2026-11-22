@@ -1,5 +1,6 @@
 "use client";
 
+import { PRIVATE_BUILD } from "~/lib/private-build";
 import { useEffect, useState } from "react";
 
 import { recordRecentDiagram } from "~/features/recent/recent-diagrams";
@@ -51,7 +52,7 @@ export function usePublicDiagram({
   const [found, setFound] = useState<PublicDiagram | null>(null);
 
   useEffect(() => {
-    if (!ready) return;
+    if (PRIVATE_BUILD || !ready) return;
     const confirm = (lastSuccessfulAt: string | null) => {
       const diagram = { owner, repo, lastSuccessfulAt };
       setFound(diagram);
@@ -71,5 +72,7 @@ export function usePublicDiagram({
     return () => controller.abort();
   }, [knownPublicAt, owner, ready, repo]);
 
-  return found?.owner === owner && found.repo === repo ? found : null;
+  return !PRIVATE_BUILD && found?.owner === owner && found.repo === repo
+    ? found
+    : null;
 }

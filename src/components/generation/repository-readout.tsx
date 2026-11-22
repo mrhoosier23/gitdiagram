@@ -1,3 +1,4 @@
+import { PRIVATE_BUILD } from "~/lib/private-build";
 import { Fragment } from "react";
 import { ChevronDown } from "lucide-react";
 import type { RelatedDiagrams } from "~/features/browse/related";
@@ -178,7 +179,9 @@ export function RepositoryReadout({
         <a href={markdownPath} type="text/markdown">
           Read as Markdown
         </a>{" "}
-        · <ReadmeBadgeLink owner={owner} repo={repo} />
+        {!PRIVATE_BUILD && (
+          <> · <ReadmeBadgeLink owner={owner} repo={repo} /></>
+        )}
       </p>
     </section>
   );
