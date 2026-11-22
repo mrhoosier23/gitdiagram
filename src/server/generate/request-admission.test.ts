@@ -72,6 +72,28 @@ describe("admitGenerationRequest", () => {
     );
   });
 
+  it("blocks zero-dollar private generation before touching credentials or Redis", async () => {
+    vi.stubEnv("PRIVATE_INSTANCE_ENABLED", "1");
+    vi.stubEnv("PRIVATE_MONTHLY_BUDGET_USD", "0");
+    try {
+      const result = await admitGenerationRequest(request({
+        api_key: "sk-even-own-keys-blocked",
+      }));
+      expect(result.admitted).toBe(false);
+      if (!result.admitted) {
+        expect(result.response.status).toBe(403);
+        await expect(result.response.json()).resolves.toMatchObject({
+          error_code: "PRIVATE_MODEL_SPEND_BLOCKED",
+        });
+      }
+      expect(mocks.resolveRequestCredentials).not.toHaveBeenCalled();
+      expect(mocks.consumeInfrastructureRateLimit).not.toHaveBeenCalled();
+      expect(mocks.consumeRateLimit).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   it("charges an operator back-fill run to no address bucket", async () => {
     vi.stubEnv("CRON_SECRET", "operator-secret");
     try {

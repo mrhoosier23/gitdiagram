@@ -40,6 +40,8 @@
   // back.
   "vars": {
     "PRIVATE_INSTANCE_ENABLED": "1",
+    "PRIVATE_MONTHLY_BUDGET_USD": "0",
+    "PRIVATE_AI_PAID_CALLS_ENABLED": "0",
     // Turns IndexNow pings on (off everywhere else).
     "INDEXNOW_ENABLED": "0",
     // Where the cron handler and internal calls address the site.

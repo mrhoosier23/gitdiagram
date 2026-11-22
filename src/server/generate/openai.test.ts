@@ -24,6 +24,7 @@ vi.mock("openai", () => ({
 
 import { UpstreamProviderError } from "~/server/generate/errors";
 import {
+  countInputTokens,
   generateStructuredOutput,
   streamCompletion,
 } from "~/server/generate/openai";
@@ -59,6 +60,37 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 afterEach(() => vi.unstubAllEnvs());
+
+describe("private zero-dollar model gateway", () => {
+  it("blocks stream, structured output and token-count requests even with API keys", async () => {
+    vi.stubEnv("PRIVATE_INSTANCE_ENABLED", "1");
+    vi.stubEnv("PRIVATE_MONTHLY_BUDGET_USD", "0");
+    vi.stubEnv("PRIVATE_AI_PAID_CALLS_ENABLED", "1");
+    const params = {
+      provider: "openai" as const,
+      model: "gpt-6-luna",
+      systemPrompt: "system",
+      userPrompt: "user",
+      apiKey: "sk-test-never-used",
+    };
+    await expect(streamCompletion(params)).rejects.toThrow(
+      /\$0\/month budget/,
+    );
+    await expect(
+      generateStructuredOutput({
+        ...params,
+        schema: z.object({ ok: z.boolean() }),
+        schemaName: "test",
+      }),
+    ).rejects.toThrow(/\$0\/month budget/);
+    await expect(countInputTokens(params)).rejects.toThrow(
+      /\$0\/month budget/,
+    );
+    expect(openAiMocks.clientOptions).not.toHaveBeenCalled();
+    expect(openAiMocks.responsesCreate).not.toHaveBeenCalled();
+    expect(openAiMocks.responsesParse).not.toHaveBeenCalled();
+  });
+});
 
 describe("OpenAI Responses text verbosity", () => {
   it.each(["gpt-5.6-luna", "gpt-6-luna"])(

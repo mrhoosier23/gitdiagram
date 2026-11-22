@@ -9,6 +9,11 @@ import { NextResponse } from "next/server";
 
 import { estimateGenerationCost } from "~/server/generate/cost-estimate";
 import {
+  PRIVATE_MODEL_SPEND_BLOCKED,
+  PRIVATE_MODEL_SPEND_ERROR_CODE,
+  privateModelSpendBlocked,
+} from "~/server/generate/private-budget";
+import {
   getComplimentaryModelMismatchMessage,
   getComplimentaryProviderMismatchMessage,
   isComplimentaryGateEnabled,
@@ -60,6 +65,18 @@ function jsonResponse(
 
 export async function POST(request: Request) {
   const requestId = randomUUID();
+  // This endpoint may perform provider token counts. At $0, refuse before
+  // any rate-limit, GitHub, Redis or model call.
+  if (privateModelSpendBlocked()) {
+    return jsonResponse(
+      {
+        ok: false,
+        error: PRIVATE_MODEL_SPEND_BLOCKED,
+        error_code: PRIVATE_MODEL_SPEND_ERROR_CODE,
+      },
+      { status: 403, requestId },
+    );
+  }
   const deadlineSignal = AbortSignal.timeout(COST_REQUEST_DEADLINE_MS);
   const signal = AbortSignal.any([request.signal, deadlineSignal]);
   let hasCallerGithubToken = false;

@@ -1,4 +1,6 @@
 import OpenAI from "openai";
+
+import { assertPrivateModelSpendAllowed } from "./private-budget";
 import { zodTextFormat } from "openai/helpers/zod";
 import type { ZodType } from "zod";
 
@@ -53,6 +55,9 @@ function getOpenRouterHeaders(): Record<string, string> {
 }
 
 function createClient(provider: AIProvider, apiKey: string): OpenAI {
+  // Defense in depth: all Responses API calls, including token counting,
+  // must fail before constructing a client when the private budget is $0.
+  assertPrivateModelSpendAllowed();
   if (provider === "openrouter") {
     return new OpenAI({
       apiKey,

@@ -1,5 +1,11 @@
 import { randomUUID, timingSafeEqual } from "node:crypto";
 
+import {
+  PRIVATE_MODEL_SPEND_BLOCKED,
+  PRIVATE_MODEL_SPEND_ERROR_CODE,
+  privateModelSpendBlocked,
+} from "./private-budget";
+
 import { registerActiveGeneration } from "./cancellation";
 import {
   consumeGenerationInfrastructureRateLimit,
@@ -81,6 +87,19 @@ function jsonError(
 export async function admitGenerationRequest(
   request: Request,
 ): Promise<GenerationRequestAdmission> {
+  // Refuse before parsing, rate-limits, Redis writes or credential resolution.
+  if (privateModelSpendBlocked()) {
+    return {
+      admitted: false,
+      response: jsonError(
+        {
+          error: PRIVATE_MODEL_SPEND_BLOCKED,
+          errorCode: PRIVATE_MODEL_SPEND_ERROR_CODE,
+        },
+        { status: 403 },
+      ),
+    };
+  }
   const parsed = await parseGenerateRequest(request);
   if (!parsed.success) {
     return {

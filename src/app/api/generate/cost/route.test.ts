@@ -84,6 +84,24 @@ describe("POST /api/generate/cost", () => {
     });
   });
 
+  it("blocks zero-dollar private estimates before GitHub or model calls", async () => {
+    vi.stubEnv("PRIVATE_INSTANCE_ENABLED", "1");
+    vi.stubEnv("PRIVATE_MONTHLY_BUDGET_USD", "0");
+    try {
+      const response = await POST(request());
+      expect(response.status).toBe(403);
+      await expect(response.json()).resolves.toMatchObject({
+        error_code: "PRIVATE_MODEL_SPEND_BLOCKED",
+      });
+      expect(mocks.consumeInfrastructureRateLimit).not.toHaveBeenCalled();
+      expect(mocks.resolveRequestCredentials).not.toHaveBeenCalled();
+      expect(mocks.getGithubData).not.toHaveBeenCalled();
+      expect(mocks.estimateCost).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   it("uses cookie credentials when the compatibility body fields are absent", async () => {
     mocks.resolveRequestCredentials.mockResolvedValueOnce({
       apiKey: "cookie-openai-key",

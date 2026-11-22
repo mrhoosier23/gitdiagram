@@ -1,6 +1,6 @@
 # Private GitDiagram: isolated Cloudflare deployment runbook
 
-**Current state (November 21, 2026, New York):** Owner-only Cloudflare Access test **deployed and browser-checked** on `gitdiagram.awolverton.com`. The owner subsequently **authorized full GitDiagram provisioning and deployment**. Three private, empty R2 buckets and two undeployed backend Worker resources were staged. **The real GitDiagram application has NOT been deployed.** A maximum monthly spending amount, dedicated Redis/OpenAI credentials and live app verification remain outstanding.  
+**Current state (November 22, 2026, New York):** Owner-only Cloudflare Access test **deployed and browser-checked** on `gitdiagram.awolverton.com`. The owner authorized full GitDiagram provisioning but then specified a **strict $0/month spending ceiling**. Three private, empty R2 buckets and two undeployed backend Worker resources were staged. **The real AI-powered GitDiagram application has NOT been deployed.** Paid OpenAI API inference cannot meet the $0 requirement without available promotional credits or a different explicit source of funded API usage, and Cloudflare R2 free usage allowances are not hard spend caps.  
 **Preparation branch:** `private-cloudflare-isolation-prep` in `mrhoosier23/gitdiagram` (currently public).  
 **Owner-only requirement:** Cloudflare Access must permit one exact owner identity; generated diagrams must not be accessible to other users. OpenAI may process bounded source-code excerpts.  
 **Boundary:** JARVIS resources, the original `gitdiagram.com` service, all existing account routes, existing credentials, and default-branch deployment automation are not touched.
@@ -39,6 +39,16 @@ For **each R2 bucket**, Cloudflare readback confirmed **zero custom domains** an
 **Still required before activation:** set an explicit monthly spending envelope; configure a project-specific OpenAI API key with a hard enforced project spend limit; provision an independent Redis service (prefer a free, isolated Upstash instance if account limits permit); create least-privilege R2 S3 credentials restricted to these new buckets; verify the DO-exporting bootstrap and internal Worker routing; and test real static files, APIs, generation, persistence, incorrect identities and spend boundaries. No tokens or keys belong in this public GitHub fork.
 
 Cloudflare's R2 Standard free allowance and Upstash's free tier are useful for a pilot, but they are *usage allowances*, not proof that this installation cannot incur charges. Consult [Cloudflare R2 pricing](https://developers.cloudflare.com/r2/pricing/), [Upstash Redis pricing](https://upstash.com/pricing/redis), and [OpenAI API enforced spend limits](https://developers.openai.com/api/docs/guides/spend-limits).
+
+## Strict $0/month decision (November 22, 2026)
+
+The owner chose **$0/month maximum**, not a $10 pilot. Treat this as an enforced stop on **any paid API/model calls or infrastructure charges**. Do not upgrade Workers or Upstash, buy OpenAI credits, enable Redis pay-as-you-go, attach chargeable services, or enable an R2 workload with unbounded operations.
+
+The private build's `PRIVATE_MONTHLY_BUDGET_USD=0` and `PRIVATE_AI_PAID_CALLS_ENABLED=0` are checked by the server's generation admission, cost estimation, and OpenAI client gateway (including source-counting requests). Even a supplied personal model key does **not** bypass the $0 model-request gate. Missing or malformed private budget settings also fail closed. These are **model-call** safeguards, not a global guarantee that R2, Cloudflare or other services cannot charge; do not deploy the full app on that premise.
+
+**Functional trade-off:** Original GitDiagram's AI-generated diagrams require paid model inference; with a $0 ceiling they must be disabled. A genuinely no-charge personal edition must omit model generation or find an independently verified, non-billable processing method, and must also replace/cap any metered R2 operations. If implementing a no-AI architecture viewer, preserve its limitations explicitly rather than claiming feature parity.
+
+Current installed resources remain inactive or harmless: three empty private R2 buckets, two undeployed internal Workers, and the existing Access-protected test stub. No OpenAI or Redis resources were provisioned in this stage. The protected site must remain the harmless stub until a $0-safe application design and live cost/identity QA are complete.
 
 ## A. Safe preparation now (no Cloudflare writes)
 
