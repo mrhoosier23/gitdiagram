@@ -3,6 +3,26 @@ import { createHmac } from "node:crypto";
 import type { ArtifactVisibility } from "~/server/storage/types";
 import { readRequiredEnv } from "~/server/storage/config";
 
+// These names are reserved for this isolated installation. The historical
+// "public" visibility still writes to a NON-public R2 bucket here. A mistaken
+// production env cannot silently reuse the upstream or JARVIS artifact buckets.
+const PRIVATE_ARTIFACT_BUCKETS: Record<ArtifactVisibility, string> = {
+  public: "andrew-gitdiagram-private-artifacts-public",
+  private: "andrew-gitdiagram-private-artifacts-private",
+};
+
+function artifactBucket(visibility: ArtifactVisibility): string {
+  const variable = visibility === "public" ? "R2_PUBLIC_BUCKET" : "R2_PRIVATE_BUCKET";
+  const bucket = readRequiredEnv(variable);
+  if (
+    process.env.PRIVATE_INSTANCE_ENABLED === "1" &&
+    bucket !== PRIVATE_ARTIFACT_BUCKETS[visibility]
+  ) {
+    throw new Error(`Refusing non-isolated ${variable} for private GitDiagram.`);
+  }
+  return bucket;
+}
+
 function normalizeSegment(value: string): string {
   return encodeURIComponent(value.trim().toLowerCase());
 }
@@ -47,7 +67,7 @@ export function getPublicLocation(
 
   return {
     visibility: "public",
-    bucket: readRequiredEnv("R2_PUBLIC_BUCKET"),
+    bucket: artifactBucket("public"),
     artifactKey: `public/v1/${normalizedUsername}/${normalizedRepo}.json`,
     statusKey: `status:v1:public:${normalizedUsername}:${normalizedRepo}`,
   };
@@ -64,7 +84,7 @@ export function getPrivateLocation(
 
   return {
     visibility: "private",
-    bucket: readRequiredEnv("R2_PRIVATE_BUCKET"),
+    bucket: artifactBucket("private"),
     artifactKey: `private/v1/${namespace}/${normalizedUsername}/${normalizedRepo}.json`,
     statusKey: `status:v1:private:${namespace}:${normalizedUsername}:${normalizedRepo}`,
   };

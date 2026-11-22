@@ -59,5 +59,6 @@ jobs:
       - name: Local tests, private OpenNext build and Wrangler dry-runs ONLY
         run: bash scripts/private/offline-verify.sh
         env:
-          PRIVATE_SITE_ORIGIN: https://gitdiagram-private-qa.invalid
+          # Compile against the actual owner-protected hostname, never call it.
+          PRIVATE_SITE_ORIGIN: https://gitdiagram.awolverton.com
           REDIS_TEST_URL: redis://127.0.0.1:6379

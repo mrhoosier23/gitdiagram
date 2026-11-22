@@ -13,6 +13,7 @@ import {
 const originalEnv = { ...process.env };
 
 beforeEach(() => {
+  process.env.PRIVATE_INSTANCE_ENABLED = "0";
   process.env.CACHE_KEY_SECRET = "test-cache-key-secret";
   process.env.R2_PUBLIC_BUCKET = "public-bucket";
   process.env.R2_PRIVATE_BUCKET = "private-bucket";
@@ -112,5 +113,61 @@ describe("getReadLocations", () => {
       "private",
       "public",
     ]);
+  });
+});
+
+describe("private installation R2 isolation", () => {
+  it("accepts only its two dedicated non-public artifact bucket names", () => {
+    process.env.PRIVATE_INSTANCE_ENABLED = "1";
+    process.env.R2_PUBLIC_BUCKET = "andrew-gitdiagram-private-artifacts-public";
+    process.env.R2_PRIVATE_BUCKET = "andrew-gitdiagram-private-artifacts-private";
+
+    expect(getPublicLocation("owner", "repo").bucket).toBe(
+      "andrew-gitdiagram-private-artifacts-public",
+    );
+    expect(getPrivateLocation("owner", "repo", "token").bucket).toBe(
+      "andrew-gitdiagram-private-artifacts-private",
+    );
+    expect(
+      getReadLocations({ username: "owner", repo: "repo", githubPat: "token" })
+        .map((location) => location.bucket),
+    ).toEqual([
+      "andrew-gitdiagram-private-artifacts-private",
+      "andrew-gitdiagram-private-artifacts-public",
+    ]);
+  });
+
+  it("refuses upstream, portfolio, or swapped buckets in private mode", () => {
+    process.env.PRIVATE_INSTANCE_ENABLED = "1";
+    process.env.R2_PUBLIC_BUCKET = "gitdiagram-public";
+
+    expect(() => getPublicLocation("owner", "repo")).toThrow(
+      /non-isolated R2_PUBLIC_BUCKET/,
+    );
+
+    process.env.R2_PUBLIC_BUCKET = "andrew-gitdiagram-private-artifacts-public";
+    process.env.R2_PRIVATE_BUCKET = "andrew-portfolio-media";
+
+    expect(() => getPrivateLocation("owner", "repo", "token")).toThrow(
+      /non-isolated R2_PRIVATE_BUCKET/,
+    );
+
+    process.env.R2_PRIVATE_BUCKET = process.env.R2_PUBLIC_BUCKET;
+    expect(() => getWriteLocation({
+      username: "owner",
+      repo: "repo",
+      githubPat: "token",
+      visibility: "private",
+    })).toThrow(/non-isolated R2_PRIVATE_BUCKET/);
+  });
+
+  it("preserves the upstream configuration when private mode is off", () => {
+    process.env.PRIVATE_INSTANCE_ENABLED = "0";
+    process.env.R2_PUBLIC_BUCKET = "upstream-public";
+    process.env.R2_PRIVATE_BUCKET = "upstream-private";
+    expect(getPublicLocation("owner", "repo").bucket).toBe("upstream-public");
+    expect(getPrivateLocation("owner", "repo", "token").bucket).toBe(
+      "upstream-private",
+    );
   });
 });
