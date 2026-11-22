@@ -1,5 +1,8 @@
 # Private GitDiagram: isolated Cloudflare deployment runbook
 
+**Live release update:** A focused owner-only diagram application is now deployed at `https://gitdiagram.awolverton.com`, using existing OpenAI API credits and browser-local saves without R2 or Redis. **This is not the complete original GitDiagram Next.js application.** See [the verified functional-core release](private-functional-core-release.md) for what is live, exact Cloudflare evidence, remaining browser acceptance and the rollback version.
+
+
 **Current state (November 22, 2026, New York):** Owner-only Cloudflare Access test **deployed and browser-checked** on `gitdiagram.awolverton.com`. The owner authorized full GitDiagram preparation and confirmed **existing prepaid OpenAI API credits**, with **$0 in new spending**. Three private, empty R2 buckets and two undeployed backend Worker resources were staged. **The real AI-powered GitDiagram application has NOT been deployed.** Credit-funded OpenAI generation is allowed in the isolated code only with the owner's UI-provided key. Non-AI storage remains blocked until a $0-safe operating plan is proven.  
 **Preparation branch:** `private-cloudflare-isolation-prep` in `mrhoosier23/gitdiagram` (currently public).  
 **Owner-only requirement:** Cloudflare Access must permit one exact owner identity; generated diagrams must not be accessible to other users. OpenAI may process bounded source-code excerpts.  
