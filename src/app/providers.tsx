@@ -1,5 +1,6 @@
 "use client";
 
+import { PRIVATE_BUILD } from "~/lib/private-build";
 import { Suspense, useEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { ThemeProvider } from "next-themes";
@@ -67,7 +68,7 @@ export function CSPostHogProvider({ children }: { children: React.ReactNode }) {
       enableSystem={false}
       storageKey="gitdiagram-theme"
     >
-      <AnalyticsAfterCredentialMigration />
+      {!PRIVATE_BUILD && <AnalyticsAfterCredentialMigration />}
       {children}
     </ThemeProvider>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { PRIVATE_BUILD } from "~/lib/private-build";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Sparkles, X } from "lucide-react";
@@ -152,7 +153,7 @@ export default function MainCard({ sponsor = true }: { sponsor?: boolean }) {
               </div>
             </div>
           )}
-          {sponsor && (
+          {sponsor && !PRIVATE_BUILD && (
             <SponsorSlot
               surface="home"
               className="max-[389px]:mt-7 max-sm:mt-10"

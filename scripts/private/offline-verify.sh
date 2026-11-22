@@ -48,6 +48,8 @@ bun run test
 # CF_ENV_FILE is absent. Guard both conditions explicitly. Nothing is uploaded.
 export CI=1
 export PRIVATE_INSTANCE_ENABLED=1
+export NEXT_PUBLIC_PRIVATE_INSTANCE=1
+export AI_PROVIDER=openai
 export NEXT_PUBLIC_SITE_ORIGIN="$origin"
 export NEXT_PUBLIC_POSTHOG_KEY=""
 export NEXT_PUBLIC_PRESENCE_URL=""

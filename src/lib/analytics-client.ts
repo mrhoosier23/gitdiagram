@@ -1,3 +1,4 @@
+import { PRIVATE_BUILD } from "~/lib/private-build";
 import type { PostHog } from "posthog-js";
 
 import { dropNoiseExceptions } from "~/lib/exception-noise";
@@ -39,7 +40,7 @@ async function getReplayRegion() {
 }
 
 function getPostHog() {
-  if (!posthogKey) return null;
+  if (PRIVATE_BUILD || !posthogKey) return null;
 
   posthogPromise ??= Promise.all([
     // Bundle the recorder and capture extensions into Next.js chunks so their

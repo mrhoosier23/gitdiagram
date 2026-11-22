@@ -28,7 +28,12 @@ function normalizeProvider(value?: string): AIProvider {
 }
 
 export function getProvider(overrideProvider?: string): AIProvider {
-  return normalizeProvider(overrideProvider ?? readEnvValue("AI_PROVIDER"));
+  const provider = normalizeProvider(overrideProvider ?? readEnvValue("AI_PROVIDER"));
+  // Only OpenAI may receive repository excerpts from this private instance.
+  if (process.env.PRIVATE_INSTANCE_ENABLED === "1" && provider !== "openai") {
+    throw new Error("Private GitDiagram only permits the OpenAI provider.");
+  }
+  return provider;
 }
 
 /**

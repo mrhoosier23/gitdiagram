@@ -1,3 +1,4 @@
+import { PRIVATE_BUILD } from "~/lib/private-build";
 import "~/styles/globals.css";
 
 import { GeistSans } from "geist/font/sans";
@@ -11,7 +12,14 @@ import { renderedSponsorSchedule } from "~/lib/sponsor-campaign";
 import { SITE_URL } from "~/lib/site";
 import { chunkReloadScript } from "~/lib/chunk-reload";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = PRIVATE_BUILD
+  ? {
+      title: "GitDiagram | Private",
+      description: "Owner-only repository architecture workspace.",
+      metadataBase: new URL(SITE_URL),
+      robots: { index: false, follow: false, noarchive: true, nosnippet: true },
+    }
+  : {
   title: "GitDiagram",
   description:
     "Turn any GitHub repository into an interactive diagram for visualization in seconds.",
@@ -87,12 +95,20 @@ export default function RootLayout({
       </head>
       <body className="flex min-h-screen flex-col">
         <CSPostHogProvider>
-          <SponsorCampaignProvider {...renderedSponsorSchedule()}>
-            <Header />
-            <div className="flex-grow">{children}</div>
-            <Footer />
-          </SponsorCampaignProvider>
-          <LivePresence />
+          {PRIVATE_BUILD ? (
+            <>
+              <Header />
+              <div className="flex-grow">{children}</div>
+              <Footer />
+            </>
+          ) : (
+            <SponsorCampaignProvider {...renderedSponsorSchedule()}>
+              <Header />
+              <div className="flex-grow">{children}</div>
+              <Footer />
+            </SponsorCampaignProvider>
+          )}
+          {!PRIVATE_BUILD && <LivePresence />}
         </CSPostHogProvider>
       </body>
     </html>
