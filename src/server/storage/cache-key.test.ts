@@ -120,7 +120,8 @@ describe("private installation R2 isolation", () => {
   it("accepts only its two dedicated non-public artifact bucket names", () => {
     process.env.PRIVATE_INSTANCE_ENABLED = "1";
     process.env.R2_PUBLIC_BUCKET = "andrew-gitdiagram-private-artifacts-public";
-    process.env.R2_PRIVATE_BUCKET = "andrew-gitdiagram-private-artifacts-private";
+    process.env.R2_PRIVATE_BUCKET =
+      "andrew-gitdiagram-private-artifacts-private";
 
     expect(getPublicLocation("owner", "repo").bucket).toBe(
       "andrew-gitdiagram-private-artifacts-public",
@@ -129,8 +130,11 @@ describe("private installation R2 isolation", () => {
       "andrew-gitdiagram-private-artifacts-private",
     );
     expect(
-      getReadLocations({ username: "owner", repo: "repo", githubPat: "token" })
-        .map((location) => location.bucket),
+      getReadLocations({
+        username: "owner",
+        repo: "repo",
+        githubPat: "token",
+      }).map((location) => location.bucket),
     ).toEqual([
       "andrew-gitdiagram-private-artifacts-private",
       "andrew-gitdiagram-private-artifacts-public",
@@ -153,12 +157,14 @@ describe("private installation R2 isolation", () => {
     );
 
     process.env.R2_PRIVATE_BUCKET = process.env.R2_PUBLIC_BUCKET;
-    expect(() => getWriteLocation({
-      username: "owner",
-      repo: "repo",
-      githubPat: "token",
-      visibility: "private",
-    })).toThrow(/non-isolated R2_PRIVATE_BUCKET/);
+    expect(() =>
+      getWriteLocation({
+        username: "owner",
+        repo: "repo",
+        githubPat: "token",
+        visibility: "private",
+      }),
+    ).toThrow(/non-isolated R2_PRIVATE_BUCKET/);
   });
 
   it("preserves the upstream configuration when private mode is off", () => {

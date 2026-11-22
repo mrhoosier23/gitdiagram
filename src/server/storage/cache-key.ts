@@ -12,13 +12,16 @@ const PRIVATE_ARTIFACT_BUCKETS: Record<ArtifactVisibility, string> = {
 };
 
 function artifactBucket(visibility: ArtifactVisibility): string {
-  const variable = visibility === "public" ? "R2_PUBLIC_BUCKET" : "R2_PRIVATE_BUCKET";
+  const variable =
+    visibility === "public" ? "R2_PUBLIC_BUCKET" : "R2_PRIVATE_BUCKET";
   const bucket = readRequiredEnv(variable);
   if (
     process.env.PRIVATE_INSTANCE_ENABLED === "1" &&
     bucket !== PRIVATE_ARTIFACT_BUCKETS[visibility]
   ) {
-    throw new Error(`Refusing non-isolated ${variable} for private GitDiagram.`);
+    throw new Error(
+      `Refusing non-isolated ${variable} for private GitDiagram.`,
+    );
   }
   return bucket;
 }
